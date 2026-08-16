@@ -1,39 +1,40 @@
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 
 :root {
-  --bg: #0a0a12;
-  --bg-elevated: #12121e;
-  --surface: #16162a;
-  --surface-2: #1c1c33;
-  --surface-hover: #22223f;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
+  --bg: #0b110d;
+  --bg-elevated: #101710;
+  --surface: #141d17;
+  --surface-2: #1a251d;
+  --surface-hover: #202e24;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
 
-  --text: #f4f3fb;
-  --text-dim: #a3a1bd;
-  --text-faint: #6d6b8a;
+  --text: #eaeee9;
+  --text-dim: #96a599;
+  --text-faint: #5f6f63;
 
-  --accent: #b14bff;
-  --accent-2: #7b2ff7;
-  --cyan: #3ef0ff;
-  --pink: #ff4ecb;
-  --green: #37e28c;
-  --amber: #ffb547;
-  --red: #ff5c7a;
+  --accent: #5f9271;
+  --accent-2: #3c6449;
+  --cyan: #b08a5c;
+  --pink: #a97a50;
+  --green: #6fae7f;
+  --amber: #bf9257;
+  --red: #b5583f;
+  --brown: #8a6240;
 
-  --accent-grad: linear-gradient(135deg, #b14bff 0%, #7b2ff7 50%, #ff4ecb 100%);
-  --accent-grad-soft: linear-gradient(135deg, rgba(177, 75, 255, 0.18), rgba(255, 78, 203, 0.12));
-  --cyan-grad: linear-gradient(135deg, #3ef0ff, #3a7bff);
+  --accent-grad: linear-gradient(135deg, #5f9271 0%, #3c6449 100%);
+  --accent-grad-soft: linear-gradient(135deg, rgba(95, 146, 113, 0.16), rgba(138, 98, 64, 0.1));
+  --cyan-grad: linear-gradient(135deg, #b08a5c, #8a6240);
 
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 22px;
-  --radius-xl: 28px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
   --radius-pill: 999px;
 
-  --shadow-glow: 0 8px 32px rgba(123, 47, 247, 0.28);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
-  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 6px 18px rgba(60, 100, 73, 0.22);
+  --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.28);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.2);
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -43,20 +44,20 @@
 }
 
 :root[data-theme="light"] {
-  --bg: #f6f5fb;
+  --bg: #f4f5f1;
   --bg-elevated: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f0eef9;
-  --surface-hover: #e8e5f7;
-  --border: rgba(20, 10, 40, 0.08);
-  --border-strong: rgba(20, 10, 40, 0.14);
+  --surface-2: #eceee6;
+  --surface-hover: #e2e6db;
+  --border: rgba(20, 30, 20, 0.08);
+  --border-strong: rgba(20, 30, 20, 0.14);
 
-  --text: #191527;
-  --text-dim: #625d7d;
-  --text-faint: #948fb3;
+  --text: #171e18;
+  --text-dim: #566153;
+  --text-faint: #8b968a;
 
-  --shadow-card: 0 4px 20px rgba(90, 60, 150, 0.1);
-  --shadow-soft: 0 2px 8px rgba(90, 60, 150, 0.08);
+  --shadow-card: 0 4px 18px rgba(40, 60, 40, 0.08);
+  --shadow-soft: 0 2px 8px rgba(40, 60, 40, 0.06);
   color-scheme: light;
 }
 
@@ -129,26 +130,26 @@ select {
   max-width: 480px;
   max-height: 480px;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.35;
+  filter: blur(110px);
+  opacity: 0.16;
 }
 
 :root[data-theme="light"] .app-bg::before,
 :root[data-theme="light"] .app-bg::after {
-  opacity: 0.18;
+  opacity: 0.1;
 }
 
 .app-bg::before {
-  background: #7b2ff7;
+  background: #3c6449;
   top: -10%;
   right: -20%;
 }
 
 .app-bg::after {
-  background: #ff4ecb;
+  background: #6b4a2e;
   bottom: 0%;
   left: -25%;
-  opacity: 0.18;
+  opacity: 0.1;
 }
 
 .glass {
@@ -215,9 +216,9 @@ select {
 }
 
 .btn-danger {
-  background: rgba(255, 92, 122, 0.14);
+  background: rgba(181, 88, 63, 0.14);
   color: var(--red);
-  border: 1px solid rgba(255, 92, 122, 0.3);
+  border: 1px solid rgba(181, 88, 63, 0.3);
 }
 
 .btn:disabled {
@@ -249,12 +250,12 @@ select {
 }
 
 .badge-new {
-  background: rgba(62, 240, 255, 0.15);
+  background: rgba(176, 138, 92, 0.18);
   color: var(--cyan);
 }
 
 .badge-sale {
-  background: rgba(255, 92, 122, 0.16);
+  background: rgba(181, 88, 63, 0.16);
   color: var(--red);
 }
 

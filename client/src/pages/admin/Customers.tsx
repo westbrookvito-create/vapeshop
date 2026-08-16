@@ -60,7 +60,7 @@ export default function AdminCustomers() {
                 <button
                   onClick={() => toggleBan(c)}
                   className="chip"
-                  style={{ background: c.isBanned ? "rgba(255,92,122,0.15)" : "var(--surface-2)", color: c.isBanned ? "var(--red)" : "var(--text-dim)", flexShrink: 0 }}
+                  style={{ background: c.isBanned ? "rgba(181,88,63,0.15)" : "var(--surface-2)", color: c.isBanned ? "var(--red)" : "var(--text-dim)", flexShrink: 0 }}
                 >
                   {c.isBanned ? "Разблокировать" : "Блок"}
                 </button>

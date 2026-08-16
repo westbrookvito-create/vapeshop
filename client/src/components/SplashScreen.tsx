@@ -1,3 +1,5 @@
+import { LeafIcon } from "./Icons";
+
 export default function SplashScreen() {
   return (
     <div
@@ -21,11 +23,11 @@ export default function SplashScreen() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 34,
+          color: "#fff",
           boxShadow: "var(--shadow-glow)",
         }}
       >
-        💨
+        <LeafIcon size={34} strokeWidth={1.6} />
       </div>
       <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.01em" }}>CloudBar</div>
       <div className="text-faint" style={{ fontSize: 13 }}>

@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, type Product, type Category } from "../../lib/api";
 import { formatPrice } from "../../lib/format";
-import { SearchIcon, PlusIcon, ChevronRightIcon } from "../../components/Icons";
+import { SearchIcon, PlusIcon, ChevronRightIcon, BoxIcon } from "../../components/Icons";
 import { ListSkeleton } from "../../components/Skeletons";
 import EmptyState from "../../components/EmptyState";
+import ProductImage from "../../components/ProductImage";
+import CategoryIcon from "../../components/CategoryIcon";
 
 export default function AdminProducts() {
   const navigate = useNavigate();
@@ -48,8 +50,8 @@ export default function AdminProducts() {
       <div className="hide-scrollbar" style={{ display: "flex", gap: 8, padding: "14px 20px", overflowX: "auto" }}>
         <button className={`chip ${!categoryFilter ? "active" : ""}`} onClick={() => setCategoryFilter(undefined)}>Все</button>
         {categories.map((c) => (
-          <button key={c.id} className={`chip ${categoryFilter === c.id ? "active" : ""}`} onClick={() => setCategoryFilter(c.id)}>
-            {c.icon} {c.name}
+          <button key={c.id} className={`chip ${categoryFilter === c.id ? "active" : ""}`} onClick={() => setCategoryFilter(c.id)} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <CategoryIcon icon={c.icon} size={14} /> {c.name}
           </button>
         ))}
       </div>
@@ -58,13 +60,13 @@ export default function AdminProducts() {
         {products === null ? (
           <ListSkeleton count={5} height={78} />
         ) : products.length === 0 ? (
-          <EmptyState icon="📦" title="Товары не найдены" />
+          <EmptyState icon={<BoxIcon size={30} strokeWidth={1.4} />} title="Товары не найдены" />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {products.map((p) => (
               <button key={p.id} onClick={() => navigate(`/admin/products/${p.id}`)} className="card" style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, opacity: p.isActive ? 1 : 0.55 }}>
-                <div style={{ width: 50, height: 50, borderRadius: 12, background: p.gradient, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
-                  {p.emoji}
+                <div style={{ width: 50, height: 50, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}>
+                  <ProductImage image={p.image} color={p.color} iconSize={20} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                   <div style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>

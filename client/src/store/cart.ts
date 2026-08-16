@@ -6,8 +6,8 @@ export type CartLine = {
   productId: number;
   name: string;
   price: number;
-  gradient: string;
-  emoji: string;
+  color: string;
+  image: string | null;
   flavor?: string;
   nicotine?: number;
   qty: number;
@@ -48,8 +48,8 @@ export const useCart = create<CartState>()(
                 productId: product.id,
                 name: product.name,
                 price: product.price,
-                gradient: product.gradient,
-                emoji: product.emoji,
+                color: product.color,
+                image: product.image,
                 flavor: product.flavor !== "—" ? product.flavor : undefined,
                 nicotine: opts.nicotine,
                 qty,

@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useSession } from "../store/session";
 import { useFavorites } from "../store/favorites";
-import { ReceiptIcon, HeartIcon, BellIcon, SettingsIcon, ChevronRightIcon, UserIcon } from "../components/Icons";
+import { ReceiptIcon, HeartIcon, BellIcon, SettingsIcon, ChevronRightIcon, WalletIcon } from "../components/Icons";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -58,15 +58,27 @@ export default function Profile() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            color: "#04202b",
-            boxShadow: "0 8px 28px rgba(62,240,255,0.22)",
+            color: "#211708",
+            boxShadow: "0 6px 20px rgba(138,98,64,0.22)",
           }}
         >
           <div>
             <div style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", opacity: 0.75 }}>Бонусный счёт</div>
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 4 }}>{user?.bonusPoints ?? 0} баллов</div>
           </div>
-          <div style={{ fontSize: 40 }}>💎</div>
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: "rgba(255,255,255,0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <WalletIcon size={24} />
+          </div>
         </div>
       </div>
 

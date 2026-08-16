@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../store/cart";
 import { useSession } from "../store/session";
-import { HomeIcon, GridIcon, CartIcon, ReceiptIcon, UserIcon, ChartIcon, BoxIcon, UsersIcon, GridIcon as MoreIcon } from "./Icons";
+import { HomeIcon, GridIcon, CartIcon, ReceiptIcon, UserIcon, ChartIcon, BoxIcon, UsersIcon, SettingsIcon, GridIcon as MoreIcon } from "./Icons";
 import { haptic } from "../lib/telegram";
 
 const shopItems = [
@@ -131,11 +131,11 @@ export default function BottomNav({ mode }: { mode: "shop" | "admin" }) {
             justifyContent: "center",
             boxShadow: "var(--shadow-glow)",
             border: "none",
-            fontSize: 20,
+            color: "#fff",
           }}
           title="Админ-панель"
         >
-          ⚙️
+          <SettingsIcon size={20} />
         </button>
       )}
     </nav>

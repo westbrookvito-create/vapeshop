@@ -7,7 +7,7 @@ import Header from "../components/Header";
 import EmptyState from "../components/EmptyState";
 import StatusBadge from "../components/StatusBadge";
 import { ListSkeleton } from "../components/Skeletons";
-import { ChevronRightIcon } from "../components/Icons";
+import { ChevronRightIcon, ReceiptIcon } from "../components/Icons";
 
 export default function Orders() {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export default function Orders() {
         {orders === null ? (
           <ListSkeleton count={3} height={96} />
         ) : orders.length === 0 ? (
-          <EmptyState icon="📦" title="Заказов пока нет" subtitle="Оформите первый заказ, и он появится здесь" />
+          <EmptyState icon={<ReceiptIcon size={30} strokeWidth={1.4} />} title="Заказов пока нет" subtitle="Оформите первый заказ, и он появится здесь" />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {orders.map((o) => (

@@ -6,6 +6,7 @@ import ProductCard from "../components/ProductCard";
 import Header from "../components/Header";
 import EmptyState from "../components/EmptyState";
 import { ProductGridSkeleton } from "../components/Skeletons";
+import { HeartIcon } from "../components/Icons";
 
 export default function Favorites() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export default function Favorites() {
           <ProductGridSkeleton count={4} />
         ) : products.length === 0 ? (
           <EmptyState
-            icon="💜"
+            icon={<HeartIcon size={30} strokeWidth={1.4} />}
             title="Пока пусто"
             subtitle="Нажмите на сердечко у товара, чтобы добавить его сюда"
             action={

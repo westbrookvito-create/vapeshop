@@ -195,3 +195,96 @@ export const LogOutIcon = ({ size, strokeWidth }: IconProps) => (
     <path d="M16 16l4-4-4-4M20 12H9" />
   </svg>
 );
+
+export const LeafIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <path d="M5 19c-1-6 1-12 7-15 6-2 10 1 11 6-3 8-11 10-18 9Z" />
+    <path d="M6 18c4-5 8-8 14-11" />
+  </svg>
+);
+
+export const CameraIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.2-2h6.6l1.2 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5Z" />
+    <circle cx="12" cy="13" r="3.6" />
+  </svg>
+);
+
+export const UploadCloudIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <path d="M7 18a4.5 4.5 0 0 1-1-8.9 5.5 5.5 0 0 1 10.6-1.8A4 4 0 0 1 17 18Z" />
+    <path d="M12 10.5v7M9 13.2l3-3 3 3" />
+  </svg>
+);
+
+export const AlertIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <path d="M12 3.5 21 19H3Z" />
+    <path d="M12 9.5v4.2" />
+    <circle cx="12" cy="16.6" r="0.9" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+export const InfoIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 11v5.5" />
+    <circle cx="12" cy="8" r="0.9" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+export const MapPinIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <path d="M12 21s7-6.6 7-12a7 7 0 1 0-14 0c0 5.4 7 12 7 12Z" />
+    <circle cx="12" cy="9" r="2.6" />
+  </svg>
+);
+
+export const MessageIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <path d="M4 5.5h16v11H9.5L5 20v-3.5H4Z" />
+  </svg>
+);
+
+export const BanknoteIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <rect x="2.5" y="6.5" width="19" height="11" rx="2" />
+    <circle cx="12" cy="12" r="2.8" />
+    <path d="M5.5 9v0M18.5 15v0" />
+  </svg>
+);
+
+export const FlaskIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <path d="M10 3h4M10.5 3v6l-5 9.3a1.6 1.6 0 0 0 1.4 2.4h10.2a1.6 1.6 0 0 0 1.4-2.4l-5-9.3V3" />
+    <path d="M8 15h8" />
+  </svg>
+);
+
+export const DropletIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <path d="M12 3.5s6.5 7 6.5 11.5a6.5 6.5 0 1 1-13 0C5.5 10.5 12 3.5 12 3.5Z" />
+  </svg>
+);
+
+export const CpuIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <rect x="6" y="6" width="12" height="12" rx="2.4" />
+    <rect x="9.3" y="9.3" width="5.4" height="5.4" rx="1" />
+    <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
+  </svg>
+);
+
+export const CylinderIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <ellipse cx="12" cy="6" rx="5.5" ry="2.5" />
+    <path d="M6.5 6v12a5.5 2.5 0 0 0 11 0V6" />
+    <path d="M6.5 12a5.5 2.5 0 0 0 11 0" />
+  </svg>
+);
+
+export const WrenchIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <path d="M14.5 3.5a5 5 0 0 0-6.6 5.9L3.5 14.8a2 2 0 0 0 2.8 2.8l5.4-4.4a5 5 0 0 0 5.9-6.6l-3.3 3.3-2.6-.9-.9-2.6Z" />
+  </svg>
+);

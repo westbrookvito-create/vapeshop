@@ -38,8 +38,8 @@ productsRouter.get("/:id", (req, res) => {
 productsRouter.post("/", (req, res) => {
   const b = req.body;
   const stmt = db.prepare(`
-    INSERT INTO products (category_id, name, brand, description, price, old_price, stock, rating, reviews_count, nicotine, flavor, puffs, gradient, emoji, is_featured, is_new, is_active)
-    VALUES (@category_id, @name, @brand, @description, @price, @old_price, @stock, @rating, @reviews_count, @nicotine, @flavor, @puffs, @gradient, @emoji, @is_featured, @is_new, @is_active)
+    INSERT INTO products (category_id, name, brand, description, price, old_price, stock, rating, reviews_count, nicotine, flavor, puffs, color, image, is_featured, is_new, is_active)
+    VALUES (@category_id, @name, @brand, @description, @price, @old_price, @stock, @rating, @reviews_count, @nicotine, @flavor, @puffs, @color, @image, @is_featured, @is_new, @is_active)
   `);
   const info = stmt.run({
     category_id: b.category_id,
@@ -54,8 +54,8 @@ productsRouter.post("/", (req, res) => {
     nicotine: JSON.stringify(b.nicotine ?? []),
     flavor: b.flavor || "",
     puffs: b.puffs ?? null,
-    gradient: b.gradient || "linear-gradient(135deg,#7b2ff7,#f107a3)",
-    emoji: b.emoji || "💨",
+    color: b.color || "#3c6449",
+    image: b.image ?? null,
     is_featured: b.is_featured ? 1 : 0,
     is_new: b.is_new ? 1 : 0,
     is_active: b.is_active === false ? 0 : 1,
@@ -81,8 +81,8 @@ productsRouter.put("/:id", (req, res) => {
     nicotine: b.nicotine ? JSON.stringify(b.nicotine) : existing.nicotine,
     flavor: b.flavor ?? existing.flavor,
     puffs: b.puffs !== undefined ? b.puffs : existing.puffs,
-    gradient: b.gradient ?? existing.gradient,
-    emoji: b.emoji ?? existing.emoji,
+    color: b.color ?? existing.color,
+    image: b.image !== undefined ? b.image : existing.image,
     is_featured: b.is_featured !== undefined ? (b.is_featured ? 1 : 0) : existing.is_featured,
     is_new: b.is_new !== undefined ? (b.is_new ? 1 : 0) : existing.is_new,
     is_active: b.is_active !== undefined ? (b.is_active ? 1 : 0) : existing.is_active,
@@ -91,7 +91,7 @@ productsRouter.put("/:id", (req, res) => {
   db.prepare(`
     UPDATE products SET category_id=@category_id, name=@name, brand=@brand, description=@description,
       price=@price, old_price=@old_price, stock=@stock, rating=@rating, reviews_count=@reviews_count,
-      nicotine=@nicotine, flavor=@flavor, puffs=@puffs, gradient=@gradient, emoji=@emoji,
+      nicotine=@nicotine, flavor=@flavor, puffs=@puffs, color=@color, image=@image,
       is_featured=@is_featured, is_new=@is_new, is_active=@is_active
     WHERE id=@id
   `).run(merged);
@@ -119,8 +119,8 @@ function formatProduct(row: any) {
     nicotine: JSON.parse(row.nicotine || "[]"),
     flavor: row.flavor,
     puffs: row.puffs,
-    gradient: row.gradient,
-    emoji: row.emoji,
+    color: row.color,
+    image: row.image,
     isFeatured: !!row.is_featured,
     isNew: !!row.is_new,
     isActive: !!row.is_active,

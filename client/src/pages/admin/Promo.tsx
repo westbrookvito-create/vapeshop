@@ -69,7 +69,7 @@ export default function AdminPromo() {
                 Использован {p.usedCount}{p.usageLimit > 0 ? ` из ${p.usageLimit}` : ""} раз
               </div>
             </div>
-            <button onClick={() => toggleActive(p)} className="chip" style={{ background: p.active ? "rgba(55,226,140,0.15)" : "var(--surface-2)", color: p.active ? "var(--green)" : "var(--text-faint)" }}>
+            <button onClick={() => toggleActive(p)} className="chip" style={{ background: p.active ? "rgba(111,174,127,0.15)" : "var(--surface-2)", color: p.active ? "var(--green)" : "var(--text-faint)" }}>
               {p.active ? "Активен" : "Выключен"}
             </button>
             <button onClick={() => remove(p)} style={{ background: "none", border: "none", color: "var(--text-faint)" }}>

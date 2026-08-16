@@ -4,7 +4,7 @@ import { api, type Order } from "../../lib/api";
 import { formatDate, formatPrice, STATUS_LABELS } from "../../lib/format";
 import Header from "../../components/Header";
 import StatusBadge from "../../components/StatusBadge";
-import { TruckIcon, BoxIcon, WalletIcon, UserIcon } from "../../components/Icons";
+import { TruckIcon, BoxIcon, WalletIcon, UserIcon, MessageIcon } from "../../components/Icons";
 import { useToast } from "../../store/toast";
 
 const STATUS_FLOW = ["new", "confirmed", "processing", "shipped", "completed", "cancelled"];
@@ -100,7 +100,7 @@ export default function AdminOrderDetail() {
           <div className="card" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
             <InfoRow icon={order.deliveryMethod === "delivery" ? <TruckIcon size={16} /> : <BoxIcon size={16} />} label={order.deliveryMethod === "delivery" ? "Доставка" : "Самовывоз"} value={order.address} />
             <InfoRow icon={<WalletIcon size={16} />} label="Оплата" value={order.paymentMethod === "card" ? "Картой онлайн" : "Наличными"} />
-            {order.comment && <InfoRow icon="💬" label="Комментарий" value={order.comment} />}
+            {order.comment && <InfoRow icon={<MessageIcon size={16} />} label="Комментарий" value={order.comment} />}
           </div>
         </div>
 

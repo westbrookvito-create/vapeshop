@@ -8,9 +8,9 @@ export default function AdminMore() {
 
   const items = [
     { icon: BoxIcon, label: "Категории", subtitle: "Разделы каталога", to: "/admin/categories", accent: "linear-gradient(135deg,#00c6ff,#0072ff)" },
-    { icon: TagIcon, label: "Промокоды", subtitle: "Скидки и акции", to: "/admin/promo", accent: "linear-gradient(135deg,#ff4ecb,#b14bff)" },
-    { icon: UsersIcon, label: "Клиенты", subtitle: "База покупателей", to: "/admin/customers", accent: "linear-gradient(135deg,#37e28c,#11998e)" },
-    { icon: SettingsIcon, label: "Настройки магазина", subtitle: "Доставка, оплата, контакты", to: "/admin/settings", accent: "linear-gradient(135deg,#ffb547,#ff8a3d)" },
+    { icon: TagIcon, label: "Промокоды", subtitle: "Скидки и акции", to: "/admin/promo", accent: "linear-gradient(135deg,#bf9257,#8a6240)" },
+    { icon: UsersIcon, label: "Клиенты", subtitle: "База покупателей", to: "/admin/customers", accent: "linear-gradient(135deg,#7c9463,#4c6440)" },
+    { icon: SettingsIcon, label: "Настройки магазина", subtitle: "Доставка, оплата, контакты", to: "/admin/settings", accent: "linear-gradient(135deg,#6b8574,#3f5346)" },
   ];
 
   return (

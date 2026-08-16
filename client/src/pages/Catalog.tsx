@@ -5,6 +5,7 @@ import ProductCard from "../components/ProductCard";
 import { ProductGridSkeleton } from "../components/Skeletons";
 import EmptyState from "../components/EmptyState";
 import { SearchIcon, FilterIcon, XIcon } from "../components/Icons";
+import CategoryIcon from "../components/CategoryIcon";
 import Sheet from "../components/Sheet";
 
 type SortKey = "popular" | "price_asc" | "price_desc" | "new";
@@ -91,8 +92,9 @@ export default function Catalog() {
             key={c.id}
             className={`chip ${categoryId === c.id ? "active" : ""}`}
             onClick={() => setParams({ category: String(c.id) })}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
           >
-            {c.icon} {c.name}
+            <CategoryIcon icon={c.icon} size={14} /> {c.name}
           </button>
         ))}
       </div>
@@ -108,7 +110,7 @@ export default function Catalog() {
         {loading ? (
           <ProductGridSkeleton count={6} />
         ) : sorted.length === 0 ? (
-          <EmptyState icon="🔍" title="Ничего не найдено" subtitle="Попробуйте изменить запрос или выбрать другую категорию" />
+          <EmptyState icon={<SearchIcon size={30} strokeWidth={1.4} />} title="Ничего не найдено" subtitle="Попробуйте изменить запрос или выбрать другую категорию" />
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             {sorted.map((p) => (

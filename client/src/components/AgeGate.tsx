@@ -26,11 +26,14 @@ export default function AgeGate({ onConfirm }: { onConfirm: () => void }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 44,
+            fontSize: 32,
+            fontWeight: 800,
+            color: "#fff",
+            letterSpacing: "-0.02em",
             boxShadow: "var(--shadow-glow)",
           }}
         >
-          🔞
+          18+
         </motion.div>
         <div>
           <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 8, letterSpacing: "-0.02em" }}>Подтвердите возраст</div>

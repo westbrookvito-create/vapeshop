@@ -6,7 +6,7 @@ export default function EmptyState({
   subtitle,
   action,
 }: {
-  icon: string;
+  icon: ReactNode;
   title: string;
   subtitle?: string;
   action?: ReactNode;
@@ -31,7 +31,7 @@ export default function EmptyState({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 30,
+          color: "var(--text-faint)",
         }}
       >
         {icon}

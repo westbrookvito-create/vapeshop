@@ -5,7 +5,7 @@ import { useSession } from "../store/session";
 import { api } from "../lib/api";
 import { formatPrice } from "../lib/format";
 import Header from "../components/Header";
-import { TruckIcon, BoxIcon, WalletIcon, CheckIcon } from "../components/Icons";
+import { TruckIcon, BoxIcon, WalletIcon, CheckIcon, MapPinIcon, BanknoteIcon } from "../components/Icons";
 import { useToast } from "../store/toast";
 import { hapticNotify } from "../lib/telegram";
 
@@ -103,7 +103,9 @@ export default function Checkout() {
           </div>
         ) : (
           <div className="card" style={{ padding: 14, display: "flex", gap: 10, alignItems: "center" }}>
-            <span style={{ fontSize: 22 }}>📍</span>
+            <span style={{ color: "var(--accent)" }}>
+              <MapPinIcon size={22} strokeWidth={1.6} />
+            </span>
             <div>
               <div style={{ fontWeight: 700, fontSize: 14 }}>ТЦ Галерея, точка №4</div>
               <div className="text-faint" style={{ fontSize: 12.5 }}>Ежедневно 10:00–22:00</div>
@@ -115,7 +117,7 @@ export default function Checkout() {
           <div className="label">Оплата</div>
           <div style={{ display: "flex", gap: 10 }}>
             <OptionCard active={paymentMethod === "card"} onClick={() => setPaymentMethod("card")} icon={<WalletIcon size={18} />} title="Картой" subtitle="Онлайн" />
-            <OptionCard active={paymentMethod === "cash"} onClick={() => setPaymentMethod("cash")} icon={"💵"} title="Наличными" subtitle="При получении" />
+            <OptionCard active={paymentMethod === "cash"} onClick={() => setPaymentMethod("cash")} icon={<BanknoteIcon size={18} />} title="Наличными" subtitle="При получении" />
           </div>
         </div>
 

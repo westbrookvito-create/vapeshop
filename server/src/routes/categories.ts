@@ -13,7 +13,7 @@ categoriesRouter.get("/", (_req, res) => {
 
 categoriesRouter.post("/", (req, res) => {
   const { name, icon, sortOrder } = req.body;
-  const info = db.prepare("INSERT INTO categories (name, icon, sort_order) VALUES (?, ?, ?)").run(name, icon || "🛍", sortOrder ?? 0);
+  const info = db.prepare("INSERT INTO categories (name, icon, sort_order) VALUES (?, ?, ?)").run(name, icon || "accessory", sortOrder ?? 0);
   res.status(201).json({ id: info.lastInsertRowid, name, icon, sortOrder: sortOrder ?? 0 });
 });
 

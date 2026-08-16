@@ -5,7 +5,7 @@ import { formatDate, formatPrice, STATUS_LABELS } from "../../lib/format";
 import StatusBadge from "../../components/StatusBadge";
 import { ListSkeleton } from "../../components/Skeletons";
 import EmptyState from "../../components/EmptyState";
-import { ChevronRightIcon } from "../../components/Icons";
+import { ChevronRightIcon, ReceiptIcon } from "../../components/Icons";
 
 const STATUS_FILTERS = ["all", "new", "confirmed", "processing", "shipped", "completed", "cancelled"];
 
@@ -37,7 +37,7 @@ export default function AdminOrders() {
         {orders === null ? (
           <ListSkeleton count={5} height={90} />
         ) : orders.length === 0 ? (
-          <EmptyState icon="📭" title="Заказов нет" />
+          <EmptyState icon={<ReceiptIcon size={30} strokeWidth={1.4} />} title="Заказов нет" />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {orders.map((o) => (

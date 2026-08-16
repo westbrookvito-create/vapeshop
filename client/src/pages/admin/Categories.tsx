@@ -3,16 +3,15 @@ import { api, type Category } from "../../lib/api";
 import Header from "../../components/Header";
 import Sheet from "../../components/Sheet";
 import { PlusIcon, TrashIcon, EditIcon } from "../../components/Icons";
+import CategoryIcon, { CATEGORY_ICON_KEYS } from "../../components/CategoryIcon";
 import { useToast } from "../../store/toast";
-
-const ICONS = ["🔥", "🧊", "🧪", "🧂", "🔋", "🛠", "🍓", "💎", "⚡️", "📦"];
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [name, setName] = useState("");
-  const [icon, setIcon] = useState(ICONS[0]);
+  const [icon, setIcon] = useState(CATEGORY_ICON_KEYS[0]);
   const show = useToast((s) => s.show);
 
   const load = () => api.categories.list().then(setCategories);
@@ -23,7 +22,7 @@ export default function AdminCategories() {
   const openNew = () => {
     setEditing(null);
     setName("");
-    setIcon(ICONS[0]);
+    setIcon(CATEGORY_ICON_KEYS[0]);
     setSheetOpen(true);
   };
 
@@ -72,7 +71,9 @@ export default function AdminCategories() {
       <div style={{ padding: "0 20px", display: "flex", flexDirection: "column", gap: 10 }}>
         {categories?.map((c) => (
           <div key={c.id} className="card" style={{ display: "flex", alignItems: "center", gap: 12, padding: 14 }}>
-            <span style={{ fontSize: 26 }}>{c.icon}</span>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", flexShrink: 0 }}>
+              <CategoryIcon icon={c.icon} size={20} strokeWidth={1.6} />
+            </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div>
               <div className="text-faint" style={{ fontSize: 12 }}>{c.productCount} товаров</div>
@@ -92,9 +93,18 @@ export default function AdminCategories() {
           <div>
             <div className="label">Иконка</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {ICONS.map((e) => (
-                <button key={e} onClick={() => setIcon(e)} className="chip" style={{ fontSize: 18, padding: "6px 11px", background: icon === e ? "var(--accent-grad)" : undefined }}>
-                  {e}
+              {CATEGORY_ICON_KEYS.map((key) => (
+                <button
+                  key={key}
+                  onClick={() => setIcon(key)}
+                  className="chip"
+                  style={{
+                    padding: "10px 14px",
+                    background: icon === key ? "var(--accent-grad)" : undefined,
+                    color: icon === key ? "#fff" : "var(--text-dim)",
+                  }}
+                >
+                  <CategoryIcon icon={key} size={18} strokeWidth={1.6} />
                 </button>
               ))}
             </div>

@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { api, type Order } from "../lib/api";
 import { formatDate, formatPrice, STATUS_LABELS } from "../lib/format";
 import Header from "../components/Header";
-import { CheckIcon, TruckIcon, BoxIcon, WalletIcon } from "../components/Icons";
+import { CheckIcon, TruckIcon, BoxIcon, WalletIcon, MessageIcon } from "../components/Icons";
 
 const FLOW = ["new", "confirmed", "processing", "shipped", "completed"];
 
@@ -37,7 +37,7 @@ export default function OrderDetail() {
 
       <div style={{ padding: "0 20px", display: "flex", flexDirection: "column", gap: 16 }}>
         {cancelled ? (
-          <div className="card" style={{ padding: 16, border: "1px solid rgba(255,92,122,0.3)", background: "rgba(255,92,122,0.08)" }}>
+          <div className="card" style={{ padding: 16, border: "1px solid rgba(181,88,63,0.3)", background: "rgba(181,88,63,0.08)" }}>
             <div style={{ fontWeight: 800, color: "var(--red)", fontSize: 15 }}>Заказ отменён</div>
             {order.comment && <div className="text-dim" style={{ fontSize: 13, marginTop: 4 }}>{order.comment}</div>}
           </div>
@@ -59,7 +59,7 @@ export default function OrderDetail() {
                       color: i <= stepIndex ? "#fff" : "var(--text-faint)",
                     }}
                   >
-                    {i < stepIndex ? <CheckIcon size={13} strokeWidth={3} /> : <span style={{ fontSize: 11, fontWeight: 800 }}>{i + 1}</span>}
+                    {i <= stepIndex ? <CheckIcon size={13} strokeWidth={3} /> : <span style={{ fontSize: 11, fontWeight: 800 }}>{i + 1}</span>}
                   </div>
                   {i < FLOW.length - 1 && (
                     <div style={{ flex: 1, height: 3, borderRadius: 2, background: i < stepIndex ? "var(--accent)" : "var(--surface-2)", margin: "0 4px" }} />
@@ -92,7 +92,7 @@ export default function OrderDetail() {
           <div className="card" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
             <InfoRow icon={order.deliveryMethod === "delivery" ? <TruckIcon size={16} /> : <BoxIcon size={16} />} label={order.deliveryMethod === "delivery" ? "Доставка" : "Самовывоз"} value={order.address} />
             <InfoRow icon={<WalletIcon size={16} />} label="Оплата" value={order.paymentMethod === "card" ? "Картой онлайн" : "Наличными при получении"} />
-            {order.comment && !cancelled && <InfoRow icon="💬" label="Комментарий" value={order.comment} />}
+            {order.comment && !cancelled && <InfoRow icon={<MessageIcon size={16} />} label="Комментарий" value={order.comment} />}
           </div>
         </div>
 

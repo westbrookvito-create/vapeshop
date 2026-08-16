@@ -1,42 +1,43 @@
-import { useEffect, useState, type ReactNode, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type ReactNode, type CSSProperties, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, type Category } from "../../lib/api";
 import Header from "../../components/Header";
+import ProductImage from "../../components/ProductImage";
 import { useToast } from "../../store/toast";
-import { TrashIcon, CheckIcon } from "../../components/Icons";
+import { TrashIcon, CheckIcon, CameraIcon, UploadCloudIcon, XIcon } from "../../components/Icons";
 
-const GRADIENTS = [
-  "linear-gradient(135deg,#7b2ff7,#f107a3)",
-  "linear-gradient(135deg,#00c6ff,#0072ff)",
-  "linear-gradient(135deg,#11998e,#38ef7d)",
-  "linear-gradient(135deg,#f857a6,#ff5858)",
-  "linear-gradient(135deg,#7f00ff,#e100ff)",
-  "linear-gradient(135deg,#00d2ff,#3a47d5)",
-  "linear-gradient(135deg,#f7971e,#ffd200)",
-  "linear-gradient(135deg,#ee0979,#ff6a00)",
-  "linear-gradient(135deg,#4facfe,#00f2fe)",
-  "linear-gradient(135deg,#a18cd1,#fbc2eb)",
-  "linear-gradient(135deg,#0ba360,#3cba92)",
-  "linear-gradient(135deg,#5f2c82,#49a09d)",
+const COLORS = [
+  "#3c6449", "#4c6a55", "#5f9271", "#6b8574", "#7c9463", "#55703f",
+  "#8a6240", "#a9784f", "#6b4a2e", "#4c584b", "#9c7b52", "#3f5346",
 ];
 const NICOTINE_OPTIONS = [0, 3, 6, 20, 35, 50];
-const EMOJI_OPTIONS = ["💨", "🍓", "🍉", "🍑", "🍋", "🫐", "🥭", "🍈", "🥤", "☁️", "🧊", "💎", "⚡️", "🔷", "🌀", "🔩", "🔌", "🧷", "🧰"];
 
 const empty = {
   name: "", brand: "", description: "", price: 0, old_price: null as number | null, stock: 0,
   category_id: undefined as number | undefined, nicotine: [] as number[], flavor: "", puffs: null as number | null,
-  gradient: GRADIENTS[0], emoji: "💨", is_featured: false, is_new: false, is_active: true,
+  color: COLORS[0], image: null as string | null, is_featured: false, is_new: false, is_active: true,
 };
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function AdminProductEdit() {
   const { id } = useParams();
   const isNew = !id || id === "new";
   const navigate = useNavigate();
   const show = useToast((s) => s.show);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     api.categories.list().then((cats) => {
@@ -50,14 +51,35 @@ export default function AdminProductEdit() {
     api.products.get(Number(id)).then((p) => {
       setForm({
         name: p.name, brand: p.brand, description: p.description, price: p.price, old_price: p.oldPrice, stock: p.stock,
-        category_id: p.categoryId, nicotine: p.nicotine, flavor: p.flavor, puffs: p.puffs, gradient: p.gradient,
-        emoji: p.emoji, is_featured: p.isFeatured, is_new: p.isNew, is_active: p.isActive,
+        category_id: p.categoryId, nicotine: p.nicotine, flavor: p.flavor, puffs: p.puffs, color: p.color,
+        image: p.image, is_featured: p.isFeatured, is_new: p.isNew, is_active: p.isActive,
       });
       setLoading(false);
     });
   }, [id, isNew]);
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }));
+
+  const onPickPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      show("Выберите файл изображения", "error");
+      return;
+    }
+    setUploading(true);
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const { url } = await api.upload.image(dataUrl);
+      set("image", url);
+      show("Фото загружено", "success");
+    } catch {
+      show("Не удалось загрузить фото", "error");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const save = async () => {
     if (!form.name.trim() || !form.category_id) {
@@ -116,32 +138,83 @@ export default function AdminProductEdit() {
       />
 
       <div style={{ padding: "0 20px", display: "flex", flexDirection: "column", gap: 18 }}>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <div style={{ width: 96, height: 96, borderRadius: 26, background: form.gradient, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 44 }}>
-            {form.emoji}
-          </div>
-        </div>
-
         <div>
-          <div className="label">Иконка товара</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {EMOJI_OPTIONS.map((e) => (
-              <button key={e} onClick={() => set("emoji", e)} className="chip" style={{ fontSize: 17, padding: "6px 10px", background: form.emoji === e ? "var(--accent-grad)" : undefined, border: form.emoji === e ? "none" : undefined }}>
-                {e}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="label">Цвет карточки</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {GRADIENTS.map((g) => (
+          <div className="label">Фото товара</div>
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={onPickPhoto} style={{ display: "none" }} />
+          <div
+            onClick={() => !uploading && fileInputRef.current?.click()}
+            className="card"
+            style={{
+              position: "relative",
+              width: "100%",
+              aspectRatio: "1.4",
+              overflow: "hidden",
+              cursor: "pointer",
+              border: "1.5px dashed var(--border-strong)",
+            }}
+          >
+            <ProductImage image={form.image} color={form.color} iconSize={40} />
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                background: form.image ? "rgba(11,17,13,0.45)" : "transparent",
+                color: "#fff",
+              }}
+            >
+              {uploading ? (
+                <span style={{ fontSize: 13, fontWeight: 700 }}>Загрузка…</span>
+              ) : (
+                <>
+                  <UploadCloudIcon size={26} strokeWidth={1.5} />
+                  <span style={{ fontSize: 12.5, fontWeight: 700 }}>{form.image ? "Заменить фото" : "Загрузить фото"}</span>
+                </>
+              )}
+            </div>
+            {form.image && !uploading && (
               <button
-                key={g}
-                onClick={() => set("gradient", g)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  set("image", null);
+                }}
                 style={{
-                  width: 34, height: 34, borderRadius: 10, background: g, border: form.gradient === g ? "2.5px solid var(--text)" : "2.5px solid transparent",
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: "rgba(11,17,13,0.55)",
+                  border: "none",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <XIcon size={14} />
+              </button>
+            )}
+          </div>
+          <div className="text-faint" style={{ fontSize: 11.5, marginTop: 6, display: "flex", alignItems: "center", gap: 5 }}>
+            <CameraIcon size={13} /> JPG, PNG или WEBP, до 6 МБ
+          </div>
+        </div>
+
+        <div>
+          <div className="label">Цвет карточки (если без фото)</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {COLORS.map((c) => (
+              <button
+                key={c}
+                onClick={() => set("color", c)}
+                style={{
+                  width: 30, height: 30, borderRadius: 9, background: c, border: form.color === c ? "2.5px solid var(--text)" : "2.5px solid transparent",
                 }}
               />
             ))}
@@ -159,7 +232,7 @@ export default function AdminProductEdit() {
         <Field label="Категория">
           <select className="input" value={form.category_id ?? ""} onChange={(e) => set("category_id", Number(e.target.value))}>
             {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
         </Field>

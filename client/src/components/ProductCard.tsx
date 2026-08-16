@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import type { Product } from "../lib/api";
 import { formatPrice } from "../lib/format";
 import { HeartIcon, StarIcon, PlusIcon } from "./Icons";
+import ProductImage from "./ProductImage";
 import { useFavorites } from "../store/favorites";
 import { useCart } from "../store/cart";
 import { useToast } from "../store/toast";
@@ -21,8 +22,8 @@ export default function ProductCard({ product }: { product: Product }) {
       onClick={() => navigate(`/product/${product.id}`)}
       style={{ overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column" }}
     >
-      <div style={{ position: "relative", aspectRatio: "1.15", background: product.gradient, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 46, filter: "drop-shadow(0 6px 16px rgba(0,0,0,0.25))" }}>{product.emoji}</span>
+      <div style={{ position: "relative", aspectRatio: "1.15" }}>
+        <ProductImage image={product.image} color={product.color} />
 
         <div style={{ position: "absolute", top: 10, left: 10, display: "flex", gap: 6 }}>
           {product.isNew && <span className="badge badge-new">New</span>}

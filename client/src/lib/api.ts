@@ -34,8 +34,8 @@ export type Product = {
   nicotine: number[];
   flavor: string;
   puffs: number | null;
-  gradient: string;
-  emoji: string;
+  color: string;
+  image: string | null;
   isFeatured: boolean;
   isNew: boolean;
   isActive: boolean;
@@ -107,6 +107,9 @@ export const api = {
     create: (data: Partial<Product>) => request<Product>("/products", { method: "POST", body: JSON.stringify(data) }),
     update: (id: number, data: Partial<Product>) => request<Product>(`/products/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     remove: (id: number) => request<void>(`/products/${id}`, { method: "DELETE" }),
+  },
+  upload: {
+    image: (dataUrl: string) => request<{ url: string }>("/upload", { method: "POST", body: JSON.stringify({ dataUrl }) }),
   },
   categories: {
     list: () => request<Category[]>("/categories"),

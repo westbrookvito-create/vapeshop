@@ -4,6 +4,7 @@ import { api, type Product } from "../lib/api";
 import { formatPrice } from "../lib/format";
 import Header from "../components/Header";
 import { HeartIcon, StarIcon, ChevronLeftIcon } from "../components/Icons";
+import ProductImage from "../components/ProductImage";
 import QuantityStepper from "../components/QuantityStepper";
 import { useFavorites } from "../store/favorites";
 import { useCart } from "../store/cart";
@@ -45,7 +46,8 @@ export default function ProductPage() {
 
   return (
     <div className="page" style={{ paddingBottom: "calc(var(--nav-h) + var(--safe-bottom) + 100px)" }}>
-      <div style={{ position: "relative", background: product.gradient, aspectRatio: "1.05", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ position: "relative", aspectRatio: "1.05" }}>
+        <ProductImage image={product.image} color={product.color} iconSize={64} />
         <button
           onClick={() => navigate(-1)}
           style={{
@@ -89,7 +91,6 @@ export default function ProductPage() {
         >
           <HeartIcon size={17} filled={isFav} />
         </button>
-        <span style={{ fontSize: 96, filter: "drop-shadow(0 12px 28px rgba(0,0,0,0.3))" }}>{product.emoji}</span>
         <div style={{ position: "absolute", bottom: 14, left: 16, display: "flex", gap: 6 }}>
           {product.isNew && <span className="badge badge-new">New</span>}
           {product.oldPrice && <span className="badge badge-sale">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}

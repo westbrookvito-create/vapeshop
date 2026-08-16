@@ -3,7 +3,7 @@ import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, YAxis } from "rec
 import { api } from "../../lib/api";
 import { formatPrice, STATUS_COLORS, STATUS_LABELS } from "../../lib/format";
 import StatCard from "../../components/StatCard";
-import { WalletIcon, ReceiptIcon, BellIcon, UsersIcon, ChartIcon, BoxIcon } from "../../components/Icons";
+import { WalletIcon, ReceiptIcon, BellIcon, UsersIcon, ChartIcon, BoxIcon, SettingsIcon } from "../../components/Icons";
 
 type Overview = {
   revenue: number;
@@ -27,7 +27,9 @@ export default function AdminDashboard() {
   return (
     <div className="page">
       <div style={{ padding: "calc(var(--safe-top) + 18px) 20px 4px" }}>
-        <div className="chip active" style={{ marginBottom: 10, cursor: "default" }}>⚙️ Админ-панель</div>
+        <div className="chip active" style={{ marginBottom: 10, cursor: "default", display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <SettingsIcon size={13} /> Админ-панель
+        </div>
         <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em" }}>Дашборд</div>
         <div className="text-faint" style={{ fontSize: 13, marginTop: 2 }}>CloudBar Vape Shop</div>
       </div>
@@ -43,10 +45,10 @@ export default function AdminDashboard() {
           <div style={{ padding: "18px 20px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <StatCard label="Выручка" value={formatPrice(data.revenue)} delta="12.4%" icon={<WalletIcon size={18} />} accent="var(--accent-grad)" />
             <StatCard label="Заказов всего" value={String(data.ordersCount)} delta="8.1%" icon={<ReceiptIcon size={18} />} accent="var(--cyan-grad)" />
-            <StatCard label="Новые заказы" value={String(data.newOrders)} icon={<BellIcon size={18} />} accent="linear-gradient(135deg,#ffb547,#ff8a3d)" />
-            <StatCard label="Клиентов" value={String(data.customersCount)} delta="4.2%" icon={<UsersIcon size={18} />} accent="linear-gradient(135deg,#37e28c,#11998e)" />
-            <StatCard label="Средний чек" value={formatPrice(data.avgOrder)} icon={<ChartIcon size={18} />} accent="linear-gradient(135deg,#ff4ecb,#b14bff)" />
-            <StatCard label="Мало на складе" value={String(data.lowStockCount)} deltaPositive={false} icon={<BoxIcon size={18} />} accent="linear-gradient(135deg,#ff5c7a,#ff4ecb)" />
+            <StatCard label="Новые заказы" value={String(data.newOrders)} icon={<BellIcon size={18} />} accent="linear-gradient(135deg,#bf9257,#8a6240)" />
+            <StatCard label="Клиентов" value={String(data.customersCount)} delta="4.2%" icon={<UsersIcon size={18} />} accent="linear-gradient(135deg,#7c9463,#4c6440)" />
+            <StatCard label="Средний чек" value={formatPrice(data.avgOrder)} icon={<ChartIcon size={18} />} accent="linear-gradient(135deg,#6b8574,#3f5346)" />
+            <StatCard label="Мало на складе" value={String(data.lowStockCount)} deltaPositive={false} icon={<BoxIcon size={18} />} accent="linear-gradient(135deg,#b5583f,#8a4530)" />
           </div>
 
           <div style={{ padding: "22px 20px 0" }}>
@@ -59,8 +61,8 @@ export default function AdminDashboard() {
                   <AreaChart data={data.byDay} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#b14bff" stopOpacity={0.5} />
-                        <stop offset="100%" stopColor="#b14bff" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#5f9271" stopOpacity={0.5} />
+                        <stop offset="100%" stopColor="#5f9271" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <XAxis
@@ -76,7 +78,7 @@ export default function AdminDashboard() {
                       labelStyle={{ color: "var(--text-dim)" }}
                       formatter={(v: number) => [formatPrice(v), "Выручка"]}
                     />
-                    <Area type="monotone" dataKey="revenue" stroke="#b14bff" strokeWidth={2.5} fill="url(#rev)" />
+                    <Area type="monotone" dataKey="revenue" stroke="#5f9271" strokeWidth={2.5} fill="url(#rev)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>

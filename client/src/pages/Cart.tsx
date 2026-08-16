@@ -4,7 +4,8 @@ import { formatPrice } from "../lib/format";
 import Header from "../components/Header";
 import EmptyState from "../components/EmptyState";
 import QuantityStepper from "../components/QuantityStepper";
-import { TrashIcon } from "../components/Icons";
+import ProductImage from "../components/ProductImage";
+import { CartIcon, TrashIcon } from "../components/Icons";
 import { haptic } from "../lib/telegram";
 
 export default function Cart() {
@@ -19,7 +20,7 @@ export default function Cart() {
       <div className="page">
         <Header title="Корзина" sticky={false} />
         <EmptyState
-          icon="🛒"
+          icon={<CartIcon size={30} strokeWidth={1.4} />}
           title="Корзина пуста"
           subtitle="Добавьте товары из каталога, чтобы оформить заказ"
           action={
@@ -41,20 +42,8 @@ export default function Cart() {
       <div style={{ padding: "4px 20px 0", display: "flex", flexDirection: "column", gap: 10 }}>
         {lines.map((l) => (
           <div key={`${l.productId}-${l.nicotine ?? "x"}`} className="card" style={{ display: "flex", gap: 12, padding: 12 }}>
-            <div
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: 14,
-                background: l.gradient,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 26,
-                flexShrink: 0,
-              }}
-            >
-              {l.emoji}
+            <div style={{ width: 60, height: 60, borderRadius: 14, overflow: "hidden", flexShrink: 0 }}>
+              <ProductImage image={l.image} color={l.color} iconSize={24} />
             </div>
             <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>

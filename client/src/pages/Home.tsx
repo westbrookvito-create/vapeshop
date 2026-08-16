@@ -4,7 +4,8 @@ import { api, type Category, type Product } from "../lib/api";
 import { useSession } from "../store/session";
 import ProductCard from "../components/ProductCard";
 import { ProductGridSkeleton } from "../components/Skeletons";
-import { SearchIcon, BellIcon, ArrowRightIcon } from "../components/Icons";
+import { SearchIcon, BellIcon, ArrowRightIcon, LeafIcon } from "../components/Icons";
+import CategoryIcon from "../components/CategoryIcon";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function Home() {
             С возвращением
           </div>
           <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em" }}>
-            {user?.firstName ? `${user.firstName} 👋` : "Гость 👋"}
+            {user?.firstName || "Гость"}
           </div>
         </div>
         <button
@@ -76,7 +77,9 @@ export default function Home() {
             boxShadow: "var(--shadow-glow)",
           }}
         >
-          <div style={{ position: "absolute", right: -20, top: -20, fontSize: 120, opacity: 0.18, lineHeight: 1 }}>💨</div>
+          <div style={{ position: "absolute", right: -14, top: -14, opacity: 0.16 }}>
+            <LeafIcon size={140} strokeWidth={1.1} />
+          </div>
           <div style={{ position: "relative", color: "#fff" }}>
             <div style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", opacity: 0.85 }}>
               Промо недели
@@ -123,7 +126,9 @@ export default function Home() {
                 border: "1px solid var(--border)",
               }}
             >
-              <span style={{ fontSize: 26 }}>{c.icon}</span>
+              <span style={{ color: "var(--accent)" }}>
+                <CategoryIcon icon={c.icon} size={24} strokeWidth={1.6} />
+              </span>
               <span style={{ fontSize: 11.5, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>{c.name}</span>
             </button>
           ))}
@@ -132,7 +137,7 @@ export default function Home() {
 
       <div style={{ padding: "26px 20px 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div className="section-title">🔥 Хиты продаж</div>
+          <div className="section-title">Хиты продаж</div>
           <button onClick={() => navigate("/catalog")} className="text-dim" style={{ background: "none", border: "none", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
             Все <ArrowRightIcon size={14} />
           </button>
@@ -151,7 +156,7 @@ export default function Home() {
       {fresh.length > 0 && (
         <div style={{ padding: "26px 20px 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div className="section-title">✨ Новинки</div>
+            <div className="section-title">Новинки</div>
           </div>
           <div className="hide-scrollbar" style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4 }}>
             {fresh.map((p) => (

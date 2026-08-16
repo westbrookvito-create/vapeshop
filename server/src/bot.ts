@@ -9,9 +9,9 @@ export const bot = token ? new Bot(token) : null;
 
 if (bot) {
   bot.command("start", async (ctx) => {
-    const keyboard = new InlineKeyboard().webApp("🛍 Открыть магазин", webAppUrl);
+    const keyboard = new InlineKeyboard().webApp("Открыть магазин", webAppUrl);
     await ctx.reply(
-      "Добро пожаловать в CloudBar Vape Shop! 💨\n\n" +
+      "Добро пожаловать в CloudBar Vape Shop.\n\n" +
         "Здесь вы найдёте одноразки, POD-системы, жидкости и аксессуары с быстрой доставкой.\n\n" +
         "Нажмите кнопку ниже, чтобы открыть каталог.",
       { reply_markup: keyboard }
@@ -23,7 +23,7 @@ if (bot) {
     if (!id || !getAdminIds().includes(id)) {
       return ctx.reply("У вас нет доступа к админ-панели.");
     }
-    const keyboard = new InlineKeyboard().webApp("⚙️ Админ-панель", `${webAppUrl}?admin=1`);
+    const keyboard = new InlineKeyboard().webApp("Админ-панель", `${webAppUrl}?admin=1`);
     await ctx.reply("Открыть панель управления магазином:", { reply_markup: keyboard });
   });
 
@@ -46,7 +46,7 @@ export async function notifyNewOrder(order: {
   if (!bot) return;
   const lines = order.items.map((i) => `• ${i.name}${i.flavor ? ` (${i.flavor})` : ""} × ${i.qty} — ${i.price * i.qty}₽`);
   const text =
-    `🆕 Новый заказ #${order.id}\n\n` +
+    `Новый заказ #${order.id}\n\n` +
     `${lines.join("\n")}\n\n` +
     `Итого: ${order.total}₽\n` +
     `Доставка: ${order.deliveryMethod === "delivery" ? "курьером" : "самовывоз"}\n` +
