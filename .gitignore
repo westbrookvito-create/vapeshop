@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+*.log
+.env
+server/data/*.sqlite
+server/data/*.sqlite-journal
+server/data/*.sqlite-wal
+server/data/*.sqlite-shm
+.DS_Store
+.devtools/
