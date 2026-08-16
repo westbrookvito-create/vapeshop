@@ -92,6 +92,15 @@ function isAdmin(ctx: BotContext): boolean {
   return !!id && getAdminIds().includes(id);
 }
 
+function clearWizards(ctx: BotContext) {
+  ctx.session.addProduct = undefined;
+  ctx.session.editPhoto = undefined;
+  ctx.session.addPromo = undefined;
+  ctx.session.addCategory = undefined;
+  ctx.session.renameCategory = undefined;
+  ctx.session.addPoint = undefined;
+}
+
 function money(n: number): string {
   return new Intl.NumberFormat("ru-RU").format(n) + "₽";
 }
@@ -313,16 +322,12 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
   };
 
   bot.command("admin", adminOnly, async (ctx) => {
-    ctx.session.addProduct = undefined;
-    ctx.session.editPhoto = undefined;
-    ctx.session.addPromo = undefined;
+    clearWizards(ctx);
     await ctx.reply("Панель управления CloudBar Vape Shop:", { reply_markup: mainMenuKeyboard() });
   });
 
   bot.callbackQuery("m:home", adminOnly, async (ctx) => {
-    ctx.session.addProduct = undefined;
-    ctx.session.editPhoto = undefined;
-    ctx.session.addPromo = undefined;
+    clearWizards(ctx);
     await ctx.editMessageText("Панель управления CloudBar Vape Shop:", { reply_markup: mainMenuKeyboard() });
     await ctx.answerCallbackQuery();
   });
@@ -373,6 +378,7 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
 
   bot.callbackQuery(/^p:photo:(\d+)$/, adminOnly, async (ctx) => {
     const id = Number(ctx.match![1]);
+    clearWizards(ctx);
     ctx.session.editPhoto = { productId: id };
     await ctx.reply("Отправьте новое фото товара одним сообщением.");
     await ctx.answerCallbackQuery();
@@ -430,6 +436,7 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
   });
 
   bot.callbackQuery("m:addpromo", adminOnly, async (ctx) => {
+    clearWizards(ctx);
     ctx.session.addPromo = { step: "code", data: {} };
     await ctx.reply("Введите код промокода (например, SUMMER25):");
     await ctx.answerCallbackQuery();
@@ -452,6 +459,7 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
 
   bot.callbackQuery(/^c:rename:(\d+)$/, adminOnly, async (ctx) => {
     const id = Number(ctx.match![1]);
+    clearWizards(ctx);
     ctx.session.renameCategory = { categoryId: id };
     await ctx.reply("Введите новое название категории:");
     await ctx.answerCallbackQuery();
@@ -477,6 +485,7 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
   });
 
   bot.callbackQuery("m:addcategory", adminOnly, async (ctx) => {
+    clearWizards(ctx);
     ctx.session.addCategory = { step: "name", data: {} };
     await ctx.reply("Введите название новой категории:");
     await ctx.answerCallbackQuery();
@@ -540,6 +549,7 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
   });
 
   bot.callbackQuery("m:addpoint", adminOnly, async (ctx) => {
+    clearWizards(ctx);
     ctx.session.addPoint = { step: "name", data: {} };
     await ctx.reply("Введите название точки самовывоза:");
     await ctx.answerCallbackQuery();
@@ -548,6 +558,7 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
   // ---------- Add product wizard ----------
 
   bot.callbackQuery("m:addproduct", adminOnly, async (ctx) => {
+    clearWizards(ctx);
     ctx.session.addProduct = { step: "photo", data: { image: null, nicotine: [] } };
     await ctx.reply("Добавление товара.\n\nПришлите фото товара одним сообщением, либо отправьте /skip, чтобы добавить без фото.");
     await ctx.answerCallbackQuery();
@@ -613,8 +624,7 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
   });
 
   bot.callbackQuery("wiz:cancel", adminOnly, async (ctx) => {
-    ctx.session.addProduct = undefined;
-    ctx.session.addPromo = undefined;
+    clearWizards(ctx);
     await ctx.editMessageText("Отменено.", { reply_markup: backButton("m:home") });
     await ctx.answerCallbackQuery();
   });
@@ -654,12 +664,7 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
     const text = ctx.message.text.trim();
     if (text.startsWith("/")) {
       if (text === "/cancel") {
-        ctx.session.addProduct = undefined;
-        ctx.session.addPromo = undefined;
-        ctx.session.editPhoto = undefined;
-        ctx.session.addCategory = undefined;
-        ctx.session.renameCategory = undefined;
-        ctx.session.addPoint = undefined;
+        clearWizards(ctx);
         await ctx.reply("Отменено.");
       }
       if (text !== "/skip") return;
