@@ -60,7 +60,7 @@ export default function BottomNav() {
                 }}
               >
                 <div style={{ position: "relative" }}>
-                  <item.icon size={22} strokeWidth={isActive ? 2.1 : 1.8} />
+                  <item.icon size={23} strokeWidth={1.8} filled={isActive} />
                   {"cart" in item && totalQty > 0 && (
                     <span
                       style={{

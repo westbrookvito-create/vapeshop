@@ -18,20 +18,24 @@ export const HomeIcon = ({ size, strokeWidth }: IconProps) => (
   </svg>
 );
 
-export const GridIcon = ({ size, strokeWidth }: IconProps) => (
-  <svg {...base(size, strokeWidth)}>
-    <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
-    <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
-    <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
-    <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
+export const GridIcon = ({ size, strokeWidth, filled }: IconProps & { filled?: boolean }) => (
+  <svg {...base(size, strokeWidth)} fill={filled ? "currentColor" : "none"} strokeWidth={filled ? 0 : strokeWidth}>
+    <rect x="3.4" y="3.4" width="7.6" height="7.6" rx="2.4" />
+    <rect x="13" y="3.4" width="7.6" height="7.6" rx="2.4" />
+    <rect x="3.4" y="13" width="7.6" height="7.6" rx="2.4" />
+    <rect x="13" y="13" width="7.6" height="7.6" rx="2.4" />
   </svg>
 );
 
-export const CartIcon = ({ size, strokeWidth }: IconProps) => (
+export const CartIcon = ({ size, strokeWidth, filled }: IconProps & { filled?: boolean }) => (
   <svg {...base(size, strokeWidth)}>
-    <circle cx="9.5" cy="20" r="1.4" fill="currentColor" stroke="none" />
-    <circle cx="17.5" cy="20" r="1.4" fill="currentColor" stroke="none" />
-    <path d="M2.5 3h2.2l2 12.2a1.6 1.6 0 0 0 1.6 1.3h9.2a1.6 1.6 0 0 0 1.6-1.3L21 7.5H6" />
+    <path d="M2.5 3h2.2l1.2 7.3h13.4l1.5-5.8H6.2" fill="none" />
+    <path
+      d="M5.9 10.3h13.4l-1 4.1a1.9 1.9 0 0 1-1.85 1.45H8.4a1.9 1.9 0 0 1-1.86-1.52Z"
+      fill={filled ? "currentColor" : "none"}
+    />
+    <circle cx="9.5" cy="20" r="1.5" fill="currentColor" stroke="none" />
+    <circle cx="17.5" cy="20" r="1.5" fill="currentColor" stroke="none" />
   </svg>
 );
 
@@ -42,10 +46,10 @@ export const ReceiptIcon = ({ size, strokeWidth }: IconProps) => (
   </svg>
 );
 
-export const UserIcon = ({ size, strokeWidth }: IconProps) => (
-  <svg {...base(size, strokeWidth)}>
-    <circle cx="12" cy="8" r="3.6" />
-    <path d="M4.5 20c1.3-3.8 4.2-5.8 7.5-5.8s6.2 2 7.5 5.8" />
+export const UserIcon = ({ size, strokeWidth, filled }: IconProps & { filled?: boolean }) => (
+  <svg {...base(size, strokeWidth)} fill={filled ? "currentColor" : "none"} strokeWidth={filled ? 0 : strokeWidth}>
+    <circle cx="12" cy="7.8" r="3.8" />
+    <path d="M4 20.2c1.1-4.2 4.2-6.4 8-6.4s6.9 2.2 8 6.4a1 1 0 0 1-1 1.3H5a1 1 0 0 1-1-1.3Z" />
   </svg>
 );
 
@@ -289,13 +293,13 @@ export const WrenchIcon = ({ size, strokeWidth }: IconProps) => (
   </svg>
 );
 
-export const GiftIcon = ({ size, strokeWidth }: IconProps) => (
+export const GiftIcon = ({ size, strokeWidth, filled }: IconProps & { filled?: boolean }) => (
   <svg {...base(size, strokeWidth)}>
-    <rect x="3.5" y="9.5" width="17" height="4" rx="1" />
-    <rect x="5" y="13.5" width="14" height="7.5" rx="1" />
-    <path d="M12 9.5v11.5" />
-    <path d="M12 9.5C10.5 6 8 5 6.7 6.3 5.4 7.6 7 9.5 12 9.5Z" />
-    <path d="M12 9.5C13.5 6 16 5 17.3 6.3c1.3 1.3-.3 3.2-5.3 3.2Z" />
+    <rect x="3.4" y="9.3" width="17.2" height="4.2" rx="1.3" fill={filled ? "currentColor" : "none"} />
+    <rect x="4.9" y="13.5" width="14.2" height="7.7" rx="1.3" fill={filled ? "currentColor" : "none"} />
+    {!filled && <path d="M12 9.3v11.9" />}
+    <path d="M12 9.3C10.4 5.6 7.8 4.5 6.4 5.9c-1.4 1.4.2 3.4 5.6 3.4Z" />
+    <path d="M12 9.3c1.6-3.7 4.2-4.8 5.6-3.4 1.4 1.4-.2 3.4-5.6 3.4Z" />
   </svg>
 );
 
