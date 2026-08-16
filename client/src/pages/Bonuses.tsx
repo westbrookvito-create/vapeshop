@@ -84,7 +84,7 @@ export default function Bonuses() {
         </div>
 
         {!state ? (
-          <div className="skeleton" style={{ width: 280, height: 280, borderRadius: "50%" }} />
+          <div className="skeleton" style={{ width: WHEEL_SIZE, height: WHEEL_SIZE, borderRadius: "50%" }} />
         ) : !state.eligible ? (
           <LockedWheel ordersCount={state.ordersCount} ordersRequired={state.ordersRequired} />
         ) : (
@@ -120,72 +120,113 @@ function colorForType(type: string) {
   return "#e3ebe6";
 }
 
+const WHEEL_SIZE = 288;
+const WHEEL_RADIUS = WHEEL_SIZE / 2;
+const LABEL_RADIUS = WHEEL_RADIUS - 42;
+
 function Wheel({ segments, rotation, spinning }: { segments: WheelState["segments"]; rotation: number; spinning: boolean }) {
   const gradient = segments
     .map((s, i) => `${colorForType(s.type)} ${i * SEGMENT_ANGLE}deg ${(i + 1) * SEGMENT_ANGLE}deg`)
     .join(", ");
 
   return (
-    <div style={{ position: "relative", width: 280, height: 280 }}>
+    <div style={{ position: "relative", width: WHEEL_SIZE, height: WHEEL_SIZE, filter: "drop-shadow(0 10px 24px rgba(16,32,22,0.14))" }}>
+      {/* pointer */}
+      <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", zIndex: 3 }}>
+        <div
+          style={{
+            width: 0,
+            height: 0,
+            borderLeft: "13px solid transparent",
+            borderRight: "13px solid transparent",
+            borderTop: "20px solid #fff",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 3,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 0,
+            height: 0,
+            borderLeft: "9px solid transparent",
+            borderRight: "9px solid transparent",
+            borderTop: "14px solid var(--accent)",
+          }}
+        />
+      </div>
+
       <div
         style={{
-          position: "absolute",
-          top: -6,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: 0,
-          height: 0,
-          borderLeft: "12px solid transparent",
-          borderRight: "12px solid transparent",
-          borderTop: "18px solid var(--text)",
-          zIndex: 2,
-        }}
-      />
-      <div
-        style={{
-          width: 280,
-          height: 280,
+          width: WHEEL_SIZE,
+          height: WHEEL_SIZE,
           borderRadius: "50%",
           background: `conic-gradient(${gradient})`,
-          border: "6px solid #fff",
-          boxShadow: "var(--shadow-card), 0 0 0 1.5px var(--border)",
+          border: "7px solid #fff",
+          boxShadow: "0 0 0 1.5px var(--border)",
           position: "relative",
+          overflow: "hidden",
           transform: `rotate(${rotation}deg)`,
-          transition: spinning ? "transform 4.1s cubic-bezier(0.15, 0.65, 0.1, 1)" : "none",
+          transition: spinning ? "transform 4.3s cubic-bezier(0.12, 0.68, 0.1, 1)" : "none",
         }}
       >
+        {/* segment dividers */}
+        {segments.map((_, i) => (
+          <div
+            key={`d${i}`}
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              width: 1.5,
+              height: WHEEL_RADIUS,
+              background: "rgba(255,255,255,0.32)",
+              marginLeft: -0.75,
+              transformOrigin: "center top",
+              transform: `rotate(${i * SEGMENT_ANGLE}deg)`,
+            }}
+          />
+        ))}
+
+        {/* labels: anchored at the true wheel center via a zero-size wrapper, so the
+            radial rotation + readability flip land precisely with no drift */}
         {segments.map((s, i) => {
           const angle = i * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
+          // Flip readability depends on where the label actually ends up on screen,
+          // i.e. its angle plus however far the wheel has been spun — not just its
+          // static position within the wheel's own (unrotated) local frame.
+          const effectiveAngle = ((angle + rotation) % 360 + 360) % 360;
+          const flip = effectiveAngle > 90 && effectiveAngle < 270 ? 180 : 0;
           return (
-            <div
-              key={i}
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                width: 110,
-                textAlign: "center",
-                transform: `rotate(${angle}deg) translate(0, -108px) rotate(${angle > 90 && angle < 270 ? 180 : 0}deg)`,
-                transformOrigin: "0 0",
-                marginLeft: -55,
-                color: s.type === "none" ? "var(--text-dim)" : "#fff",
-                fontSize: 12.5,
-                fontWeight: 800,
-              }}
-            >
-              {s.label}
+            <div key={i} style={{ position: "absolute", top: "50%", left: "50%", width: 0, height: 0 }}>
+              <div style={{ position: "absolute", transform: `rotate(${angle}deg) translateY(-${LABEL_RADIUS}px)`, transformOrigin: "0 0" }}>
+                <div
+                  style={{
+                    transform: `translate(-50%, -50%) rotate(${flip}deg)`,
+                    whiteSpace: "nowrap",
+                    color: s.type === "none" ? "var(--text-dim)" : "#fff",
+                    fontSize: 12,
+                    fontWeight: 800,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {s.label}
+                </div>
+              </div>
             </div>
           );
         })}
       </div>
+
       <div
         style={{
           position: "absolute",
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: 56,
-          height: 56,
+          width: 58,
+          height: 58,
           borderRadius: "50%",
           background: "#fff",
           border: "1px solid var(--border)",
@@ -194,6 +235,7 @@ function Wheel({ segments, rotation, spinning }: { segments: WheelState["segment
           alignItems: "center",
           justifyContent: "center",
           color: "var(--accent)",
+          zIndex: 2,
         }}
       >
         <GiftIcon size={24} />
@@ -207,8 +249,8 @@ function LockedWheel({ ordersCount, ordersRequired }: { ordersCount: number; ord
   return (
     <div
       style={{
-        width: 280,
-        height: 280,
+        width: WHEEL_SIZE,
+        height: WHEEL_SIZE,
         borderRadius: "50%",
         background: "var(--surface-2)",
         border: "1px solid var(--border)",

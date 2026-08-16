@@ -1,14 +1,17 @@
 import type { CSSProperties } from "react";
 import { BoxIcon } from "./Icons";
+import CategoryIcon from "./CategoryIcon";
 
 export default function ProductImage({
   image,
   color,
+  categoryIcon,
   style,
-  iconSize = 34,
+  iconSize = 40,
 }: {
   image: string | null;
   color: string;
+  categoryIcon?: string;
   style?: CSSProperties;
   iconSize?: number;
 }) {
@@ -26,15 +29,15 @@ export default function ProductImage({
       style={{
         width: "100%",
         height: "100%",
-        background: color,
+        background: `radial-gradient(120% 120% at 30% 20%, rgba(255,255,255,0.22), rgba(255,255,255,0) 60%), ${color}`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "rgba(255,255,255,0.55)",
+        color: "rgba(255,255,255,0.85)",
         ...style,
       }}
     >
-      <BoxIcon size={iconSize} strokeWidth={1.4} />
+      {categoryIcon ? <CategoryIcon icon={categoryIcon} size={iconSize} strokeWidth={1.3} /> : <BoxIcon size={iconSize} strokeWidth={1.3} />}
     </div>
   );
 }

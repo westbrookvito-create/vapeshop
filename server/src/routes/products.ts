@@ -3,34 +3,39 @@ import { db } from "../db.js";
 
 export const productsRouter = Router();
 
+const SELECT_WITH_CATEGORY = `
+  SELECT p.*, c.icon as category_icon
+  FROM products p JOIN categories c ON c.id = p.category_id
+`;
+
 productsRouter.get("/", (req, res) => {
   const { category, search, featured, active } = req.query as Record<string, string | undefined>;
-  let sql = "SELECT * FROM products WHERE 1=1";
+  let sql = `${SELECT_WITH_CATEGORY} WHERE 1=1`;
   const args: any[] = [];
 
   if (active !== "all") {
-    sql += " AND is_active = 1";
+    sql += " AND p.is_active = 1";
   }
   if (category) {
-    sql += " AND category_id = ?";
+    sql += " AND p.category_id = ?";
     args.push(Number(category));
   }
   if (search) {
-    sql += " AND (name LIKE ? OR brand LIKE ? OR flavor LIKE ?)";
+    sql += " AND (p.name LIKE ? OR p.brand LIKE ? OR p.flavor LIKE ?)";
     const like = `%${search}%`;
     args.push(like, like, like);
   }
   if (featured === "1") {
-    sql += " AND is_featured = 1";
+    sql += " AND p.is_featured = 1";
   }
-  sql += " ORDER BY is_featured DESC, id DESC";
+  sql += " ORDER BY p.is_featured DESC, p.id DESC";
 
   const rows = db.prepare(sql).all(...args) as any[];
   res.json(rows.map(formatProduct));
 });
 
 productsRouter.get("/:id", (req, res) => {
-  const row = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id) as any;
+  const row = db.prepare(`${SELECT_WITH_CATEGORY} WHERE p.id = ?`).get(req.params.id) as any;
   if (!row) return res.status(404).json({ error: "not_found" });
   res.json(formatProduct(row));
 });
@@ -60,7 +65,7 @@ productsRouter.post("/", (req, res) => {
     is_new: b.is_new ? 1 : 0,
     is_active: b.is_active === false ? 0 : 1,
   });
-  const row = db.prepare("SELECT * FROM products WHERE id = ?").get(info.lastInsertRowid);
+  const row = db.prepare(`${SELECT_WITH_CATEGORY} WHERE p.id = ?`).get(info.lastInsertRowid);
   res.status(201).json(formatProduct(row));
 });
 
@@ -95,7 +100,7 @@ productsRouter.put("/:id", (req, res) => {
       is_featured=@is_featured, is_new=@is_new, is_active=@is_active
     WHERE id=@id
   `).run(merged);
-  const row = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
+  const row = db.prepare(`${SELECT_WITH_CATEGORY} WHERE p.id = ?`).get(req.params.id);
   res.json(formatProduct(row));
 });
 
@@ -108,6 +113,7 @@ function formatProduct(row: any) {
   return {
     id: row.id,
     categoryId: row.category_id,
+    categoryIcon: row.category_icon,
     name: row.name,
     brand: row.brand,
     description: row.description,

@@ -47,7 +47,7 @@ export default function ProductPage() {
   return (
     <div className="page" style={{ paddingBottom: "calc(var(--nav-h) + var(--safe-bottom) + 100px)" }}>
       <div style={{ position: "relative", aspectRatio: "1.05" }}>
-        <ProductImage image={product.image} color={product.color} iconSize={64} />
+        <ProductImage image={product.image} color={product.color} categoryIcon={product.categoryIcon} iconSize={72} />
         <button
           onClick={() => navigate(-1)}
           style={{

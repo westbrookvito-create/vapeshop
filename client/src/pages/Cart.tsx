@@ -43,7 +43,7 @@ export default function Cart() {
         {lines.map((l) => (
           <div key={`${l.productId}-${l.nicotine ?? "x"}`} className="card" style={{ display: "flex", gap: 12, padding: 12 }}>
             <div style={{ width: 60, height: 60, borderRadius: 14, overflow: "hidden", flexShrink: 0 }}>
-              <ProductImage image={l.image} color={l.color} iconSize={24} />
+              <ProductImage image={l.image} color={l.color} categoryIcon={l.categoryIcon} iconSize={26} />
             </div>
             <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>

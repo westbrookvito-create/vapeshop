@@ -24,7 +24,7 @@ export default function ProductCard({ product }: { product: Product }) {
       style={{ overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column" }}
     >
       <div style={{ position: "relative", aspectRatio: "1.15" }}>
-        <ProductImage image={product.image} color={product.color} />
+        <ProductImage image={product.image} color={product.color} categoryIcon={product.categoryIcon} />
 
         <div style={{ position: "absolute", top: 10, left: 10, display: "flex", gap: 6 }}>
           {product.isNew && <span className="badge badge-new">New</span>}
