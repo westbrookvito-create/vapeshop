@@ -11,6 +11,8 @@ import { statsRouter } from "./routes/stats.js";
 import { settingsRouter } from "./routes/settings.js";
 import { authRouter } from "./routes/auth.js";
 import { uploadRouter, uploadsDir } from "./routes/upload.js";
+import { wheelRouter } from "./routes/wheel.js";
+import { pickupPointsRouter } from "./routes/pickupPoints.js";
 import { getAdminIds } from "./auth.js";
 
 const app = express();
@@ -31,6 +33,8 @@ app.use("/api/users", usersRouter);
 app.use("/api/stats", statsRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/upload", uploadRouter);
+app.use("/api/wheel", wheelRouter);
+app.use("/api/pickup-points", pickupPointsRouter);
 
 const port = Number(process.env.PORT) || 8787;
 app.listen(port, () => {

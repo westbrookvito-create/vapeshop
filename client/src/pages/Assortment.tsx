@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, type Category, type Product } from "../lib/api";
+import { useSession } from "../store/session";
 import ProductCard from "../components/ProductCard";
 import { ProductGridSkeleton } from "../components/Skeletons";
 import EmptyState from "../components/EmptyState";
-import { SearchIcon, FilterIcon, XIcon } from "../components/Icons";
+import { SearchIcon, FilterIcon, XIcon, LeafIcon } from "../components/Icons";
 import CategoryIcon from "../components/CategoryIcon";
 import Sheet from "../components/Sheet";
 
 type SortKey = "popular" | "price_asc" | "price_desc" | "new";
 
-export default function Catalog() {
+export default function Assortment() {
+  const user = useSession((s) => s.user);
   const [params, setParams] = useSearchParams();
   const categoryId = params.get("category") ? Number(params.get("category")) : undefined;
 
@@ -57,14 +59,18 @@ export default function Catalog() {
   return (
     <div className="page">
       <div style={{ padding: "calc(var(--safe-top) + 18px) 20px 4px" }}>
-        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 14 }}>Каталог</div>
+        <div className="text-faint" style={{ fontSize: 12.5, fontWeight: 600 }}>
+          С возвращением{user?.firstName ? `, ${user.firstName}` : ""}
+        </div>
+        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", marginTop: 2, marginBottom: 14 }}>Ассортимент</div>
+
         <div style={{ display: "flex", gap: 8 }}>
           <div className="glass" style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border)" }}>
             <SearchIcon size={17} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Поиск по каталогу"
+              placeholder="Найти по названию, вкусу, бренду"
               style={{ border: "none", outline: "none", background: "transparent", flex: 1, fontSize: 14.5 }}
             />
             {search && (
@@ -82,6 +88,47 @@ export default function Catalog() {
           </button>
         </div>
       </div>
+
+      {!search && (
+        <div style={{ padding: "16px 20px 0" }}>
+          <div
+            style={{
+              background: "var(--accent-grad)",
+              borderRadius: "var(--radius-xl)",
+              padding: "18px 20px",
+              position: "relative",
+              overflow: "hidden",
+              boxShadow: "var(--shadow-glow)",
+            }}
+          >
+            <div style={{ position: "absolute", right: -14, top: -14, opacity: 0.18, color: "#fff" }}>
+              <LeafIcon size={110} strokeWidth={1.1} />
+            </div>
+            <div style={{ position: "relative", color: "#fff" }}>
+              <div style={{ fontSize: 11.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", opacity: 0.85 }}>
+                Промо недели
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4, maxWidth: 220, lineHeight: 1.2 }}>
+                -20% на жидкости по промокоду
+              </div>
+              <div
+                style={{
+                  display: "inline-block",
+                  marginTop: 10,
+                  padding: "6px 13px",
+                  background: "rgba(255,255,255,0.22)",
+                  borderRadius: 999,
+                  fontWeight: 800,
+                  fontSize: 13,
+                  letterSpacing: "0.04em",
+                }}
+              >
+                CLOUD20
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="hide-scrollbar" style={{ display: "flex", gap: 8, padding: "16px 20px", overflowX: "auto" }}>
         <button className={`chip ${!categoryId ? "active" : ""}`} onClick={() => setParams({})}>

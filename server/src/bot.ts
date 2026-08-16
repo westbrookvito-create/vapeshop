@@ -1,11 +1,12 @@
 import "dotenv/config";
 import { Bot, InlineKeyboard } from "grammy";
 import { getAdminIds } from "./auth.js";
+import { registerAdminHandlers, type BotContext } from "./botAdmin.js";
 
 const token = process.env.BOT_TOKEN;
 const webAppUrl = process.env.WEBAPP_URL || "";
 
-export const bot = token ? new Bot(token) : null;
+export const bot = token ? new Bot<BotContext>(token) : null;
 
 if (bot) {
   bot.command("start", async (ctx) => {
@@ -18,14 +19,7 @@ if (bot) {
     );
   });
 
-  bot.command("admin", async (ctx) => {
-    const id = ctx.from?.id;
-    if (!id || !getAdminIds().includes(id)) {
-      return ctx.reply("У вас нет доступа к админ-панели.");
-    }
-    const keyboard = new InlineKeyboard().webApp("Админ-панель", `${webAppUrl}?admin=1`);
-    await ctx.reply("Открыть панель управления магазином:", { reply_markup: keyboard });
-  });
+  registerAdminHandlers(bot);
 
   bot.catch((err) => {
     console.error("Bot error:", err);
@@ -41,21 +35,27 @@ export async function notifyNewOrder(order: {
   total: number;
   deliveryMethod: string;
   address: string;
+  pickupPoint?: { name: string; address: string } | null;
   paymentMethod: string;
 }) {
   if (!bot) return;
   const lines = order.items.map((i) => `• ${i.name}${i.flavor ? ` (${i.flavor})` : ""} × ${i.qty} — ${i.price * i.qty}₽`);
+  const deliveryLine =
+    order.deliveryMethod === "delivery"
+      ? `Доставка курьером: ${order.address}`
+      : `Самовывоз: ${order.pickupPoint ? `${order.pickupPoint.name}, ${order.pickupPoint.address}` : order.address}`;
   const text =
     `Новый заказ #${order.id}\n\n` +
     `${lines.join("\n")}\n\n` +
     `Итого: ${order.total}₽\n` +
-    `Доставка: ${order.deliveryMethod === "delivery" ? "курьером" : "самовывоз"}\n` +
+    `${deliveryLine}\n` +
     `Оплата: ${order.paymentMethod === "card" ? "картой" : "наличными"}\n` +
     `Клиент: ${order.userName}${order.userUsername ? ` (@${order.userUsername})` : ""}`;
+  const keyboard = new InlineKeyboard().text("Открыть заказ", `o:view:${order.id}`);
 
   for (const adminId of getAdminIds()) {
     try {
-      await bot.api.sendMessage(adminId, text);
+      await bot.api.sendMessage(adminId, text, { reply_markup: keyboard });
     } catch (e) {
       console.error(`Failed to notify admin ${adminId}:`, e);
     }

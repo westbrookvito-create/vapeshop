@@ -1,30 +1,18 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useCart } from "../store/cart";
-import { useSession } from "../store/session";
-import { HomeIcon, GridIcon, CartIcon, ReceiptIcon, UserIcon, ChartIcon, BoxIcon, UsersIcon, SettingsIcon, GridIcon as MoreIcon } from "./Icons";
+import { GridIcon, GiftIcon, CartIcon, HeartIcon, UserIcon } from "./Icons";
 import { haptic } from "../lib/telegram";
 
-const shopItems = [
-  { to: "/", label: "Главная", icon: HomeIcon },
-  { to: "/catalog", label: "Каталог", icon: GridIcon },
+const items = [
+  { to: "/", label: "Ассортимент", icon: GridIcon, end: true },
+  { to: "/bonuses", label: "Бонусы", icon: GiftIcon },
   { to: "/cart", label: "Корзина", icon: CartIcon, cart: true },
-  { to: "/orders", label: "Заказы", icon: ReceiptIcon },
+  { to: "/favorites", label: "Избранное", icon: HeartIcon },
   { to: "/profile", label: "Профиль", icon: UserIcon },
 ];
 
-const adminItems = [
-  { to: "/admin", label: "Дашборд", icon: ChartIcon, end: true },
-  { to: "/admin/products", label: "Товары", icon: BoxIcon },
-  { to: "/admin/orders", label: "Заказы", icon: ReceiptIcon },
-  { to: "/admin/customers", label: "Клиенты", icon: UsersIcon },
-  { to: "/admin/more", label: "Ещё", icon: MoreIcon },
-];
-
-export default function BottomNav({ mode }: { mode: "shop" | "admin" }) {
+export default function BottomNav() {
   const totalQty = useCart((s) => s.totalQty());
-  const isAdmin = useSession((s) => s.isAdmin);
-  const navigate = useNavigate();
-  const items = mode === "admin" ? adminItems : shopItems;
 
   return (
     <nav
@@ -49,14 +37,13 @@ export default function BottomNav({ mode }: { mode: "shop" | "admin" }) {
           paddingBottom: "var(--safe-bottom)",
           borderRadius: "20px 20px 0 0",
           borderBottom: "none",
-          backdropFilter: "blur(20px)",
         }}
       >
         {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
-            end={"end" in item ? item.end : item.to === "/"}
+            end={item.end}
             onClick={() => haptic("light")}
             style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}
           >
@@ -80,7 +67,7 @@ export default function BottomNav({ mode }: { mode: "shop" | "admin" }) {
                         position: "absolute",
                         top: -6,
                         right: -9,
-                        background: "var(--pink)",
+                        background: "var(--accent)",
                         color: "#fff",
                         fontSize: 10,
                         fontWeight: 800,
@@ -115,29 +102,6 @@ export default function BottomNav({ mode }: { mode: "shop" | "admin" }) {
           </NavLink>
         ))}
       </div>
-      {isAdmin && mode === "shop" && (
-        <button
-          onClick={() => navigate("/admin")}
-          className="btn-primary"
-          style={{
-            position: "fixed",
-            bottom: "calc(var(--nav-h) + var(--safe-bottom) + 14px)",
-            right: "max(16px, calc(50vw - 224px))",
-            borderRadius: "999px",
-            width: 48,
-            height: 48,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "var(--shadow-glow)",
-            border: "none",
-            color: "#fff",
-          }}
-          title="Админ-панель"
-        >
-          <SettingsIcon size={20} />
-        </button>
-      )}
     </nav>
   );
 }

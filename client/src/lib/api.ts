@@ -46,6 +46,8 @@ export type Category = { id: number; name: string; icon: string; sortOrder: numb
 
 export type OrderItem = { id: number; name: string; price: number; qty: number; flavor?: string };
 
+export type PickupPoint = { id: number; name: string; address: string; hours: string; isActive: boolean };
+
 export type Order = {
   id: number;
   userId: number;
@@ -58,10 +60,22 @@ export type Order = {
   status: "new" | "confirmed" | "processing" | "shipped" | "completed" | "cancelled";
   deliveryMethod: "delivery" | "pickup";
   address: string;
+  pickupPoint: { id: number; name: string; address: string; hours: string } | null;
   paymentMethod: "card" | "cash";
   promoCode: string;
   comment: string;
   createdAt: string;
+};
+
+export type WheelSegment = { type: "discount" | "points" | "none"; value: number; label: string };
+export type WheelPrize = { segmentIndex: number; type: string; value: number; label: string; promoCode: string | null; spunAt: string };
+export type WheelState = {
+  ordersCount: number;
+  ordersRequired: number;
+  eligible: boolean;
+  spun: boolean;
+  prize: WheelPrize | null;
+  segments: WheelSegment[];
 };
 
 export type PromoCode = {
@@ -148,5 +162,12 @@ export const api = {
   settings: {
     get: () => request<Record<string, string>>("/settings"),
     update: (data: Record<string, string>) => request<Record<string, string>>("/settings", { method: "PUT", body: JSON.stringify(data) }),
+  },
+  pickupPoints: {
+    list: () => request<PickupPoint[]>("/pickup-points"),
+  },
+  wheel: {
+    get: (telegramId: number) => request<WheelState>(`/wheel/${telegramId}`),
+    spin: (telegramId: number) => request<WheelPrize>(`/wheel/${telegramId}/spin`, { method: "POST" }),
   },
 };

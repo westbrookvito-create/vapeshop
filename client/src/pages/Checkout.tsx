@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../store/cart";
 import { useSession } from "../store/session";
-import { api } from "../lib/api";
+import { api, type PickupPoint } from "../lib/api";
 import { formatPrice } from "../lib/format";
 import Header from "../components/Header";
-import { TruckIcon, BoxIcon, WalletIcon, CheckIcon, MapPinIcon, BanknoteIcon } from "../components/Icons";
+import Sheet from "../components/Sheet";
+import { TruckIcon, BoxIcon, WalletIcon, CheckIcon, MapPinIcon, BanknoteIcon, ChevronRightIcon } from "../components/Icons";
 import { useToast } from "../store/toast";
 import { hapticNotify } from "../lib/telegram";
 
@@ -25,6 +26,18 @@ export default function Checkout() {
   const [promo, setPromo] = useState<{ code: string; discountPercent: number } | null>(null);
   const [promoError, setPromoError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [points, setPoints] = useState<PickupPoint[]>([]);
+  const [pointId, setPointId] = useState<number | null>(null);
+  const [pointSheetOpen, setPointSheetOpen] = useState(false);
+
+  useEffect(() => {
+    api.pickupPoints.list().then((rows) => {
+      setPoints(rows);
+      setPointId((prev) => prev ?? rows[0]?.id ?? null);
+    });
+  }, []);
+
+  const selectedPoint = points.find((p) => p.id === pointId) || null;
 
   const delivery = deliveryMethod === "delivery" ? (subtotal >= 3000 ? 0 : 300) : 0;
   const discount = promo ? Math.round((subtotal * promo.discountPercent) / 100) : 0;
@@ -49,6 +62,10 @@ export default function Checkout() {
       show("Укажите адрес доставки", "error");
       return;
     }
+    if (deliveryMethod === "pickup" && !pointId) {
+      show("Выберите точку самовывоза", "error");
+      return;
+    }
     setSubmitting(true);
     try {
       const order = await api.orders.create({
@@ -60,7 +77,8 @@ export default function Checkout() {
         discount,
         total,
         deliveryMethod,
-        address: deliveryMethod === "delivery" ? address : "Самовывоз: ТЦ Галерея, точка №4",
+        address: deliveryMethod === "delivery" ? address : "",
+        pickupPointId: deliveryMethod === "pickup" ? pointId : null,
         paymentMethod,
         promoCode: promo?.code || "",
         comment,
@@ -102,14 +120,29 @@ export default function Checkout() {
             />
           </div>
         ) : (
-          <div className="card" style={{ padding: 14, display: "flex", gap: 10, alignItems: "center" }}>
-            <span style={{ color: "var(--accent)" }}>
-              <MapPinIcon size={22} strokeWidth={1.6} />
-            </span>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>ТЦ Галерея, точка №4</div>
-              <div className="text-faint" style={{ fontSize: 12.5 }}>Ежедневно 10:00–22:00</div>
-            </div>
+          <div>
+            <div className="label">Точка самовывоза</div>
+            <button
+              onClick={() => points.length > 1 && setPointSheetOpen(true)}
+              className="card"
+              style={{ width: "100%", padding: 14, display: "flex", gap: 10, alignItems: "center", border: "1px solid var(--border)" }}
+            >
+              <span style={{ color: "var(--accent)", flexShrink: 0 }}>
+                <MapPinIcon size={22} strokeWidth={1.6} />
+              </span>
+              <div style={{ textAlign: "left", flex: 1 }}>
+                {selectedPoint ? (
+                  <>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{selectedPoint.name}</div>
+                    <div className="text-faint" style={{ fontSize: 12.5 }}>{selectedPoint.address}</div>
+                    {selectedPoint.hours && <div className="text-faint" style={{ fontSize: 12.5 }}>{selectedPoint.hours}</div>}
+                  </>
+                ) : (
+                  <div className="text-faint" style={{ fontSize: 13 }}>Загрузка точек…</div>
+                )}
+              </div>
+              {points.length > 1 && <ChevronRightIcon size={17} />}
+            </button>
           </div>
         )}
 
@@ -186,6 +219,30 @@ export default function Checkout() {
           {submitting ? "Оформляем…" : `Оплатить ${formatPrice(total)}`}
         </button>
       </div>
+
+      <Sheet open={pointSheetOpen} onClose={() => setPointSheetOpen(false)} title="Точка самовывоза">
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {points.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => {
+                setPointId(p.id);
+                setPointSheetOpen(false);
+              }}
+              className="card"
+              style={{
+                textAlign: "left",
+                padding: "14px 16px",
+                border: pointId === p.id ? "1.5px solid var(--accent)" : "1px solid var(--border)",
+              }}
+            >
+              <div style={{ fontWeight: 800, fontSize: 14, color: pointId === p.id ? "var(--accent)" : "var(--text)" }}>{p.name}</div>
+              <div className="text-faint" style={{ fontSize: 12.5, marginTop: 2 }}>{p.address}</div>
+              {p.hours && <div className="text-faint" style={{ fontSize: 12.5 }}>{p.hours}</div>}
+            </button>
+          ))}
+        </div>
+      </Sheet>
     </div>
   );
 }

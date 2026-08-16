@@ -1,30 +1,30 @@
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 
 :root {
-  --bg: #0b110d;
-  --bg-elevated: #101710;
-  --surface: #141d17;
-  --surface-2: #1a251d;
-  --surface-hover: #202e24;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  --bg: #ffffff;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f0f4f1;
+  --surface-hover: #e6ede8;
+  --border: rgba(15, 40, 25, 0.09);
+  --border-strong: rgba(15, 40, 25, 0.16);
 
-  --text: #eaeee9;
-  --text-dim: #96a599;
-  --text-faint: #5f6f63;
+  --text: #102016;
+  --text-dim: #506358;
+  --text-faint: #8b9c92;
 
-  --accent: #5f9271;
-  --accent-2: #3c6449;
-  --cyan: #b08a5c;
-  --pink: #a97a50;
-  --green: #6fae7f;
-  --amber: #bf9257;
-  --red: #b5583f;
+  --accent: #1f5c3f;
+  --accent-2: #143d29;
+  --cyan: #1f5c3f;
+  --pink: #8a6240;
+  --green: #1f8a52;
+  --amber: #b3801f;
+  --red: #b23b2e;
   --brown: #8a6240;
 
-  --accent-grad: linear-gradient(135deg, #5f9271 0%, #3c6449 100%);
-  --accent-grad-soft: linear-gradient(135deg, rgba(95, 146, 113, 0.16), rgba(138, 98, 64, 0.1));
-  --cyan-grad: linear-gradient(135deg, #b08a5c, #8a6240);
+  --accent-grad: linear-gradient(135deg, #24704c 0%, #143d29 100%);
+  --accent-grad-soft: linear-gradient(135deg, rgba(31, 92, 63, 0.1), rgba(31, 92, 63, 0.05));
+  --cyan-grad: linear-gradient(135deg, #24704c, #143d29);
 
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -32,32 +32,14 @@
   --radius-xl: 22px;
   --radius-pill: 999px;
 
-  --shadow-glow: 0 6px 18px rgba(60, 100, 73, 0.22);
-  --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.28);
-  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 8px 22px rgba(20, 61, 41, 0.18);
+  --shadow-card: 0 2px 14px rgba(16, 32, 22, 0.06);
+  --shadow-soft: 0 2px 8px rgba(16, 32, 22, 0.05);
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --nav-h: 64px;
 
-  color-scheme: dark;
-}
-
-:root[data-theme="light"] {
-  --bg: #f4f5f1;
-  --bg-elevated: #ffffff;
-  --surface: #ffffff;
-  --surface-2: #eceee6;
-  --surface-hover: #e2e6db;
-  --border: rgba(20, 30, 20, 0.08);
-  --border-strong: rgba(20, 30, 20, 0.14);
-
-  --text: #171e18;
-  --text-dim: #566153;
-  --text-faint: #8b968a;
-
-  --shadow-card: 0 4px 18px rgba(40, 60, 40, 0.08);
-  --shadow-soft: 0 2px 8px rgba(40, 60, 40, 0.06);
   color-scheme: light;
 }
 
@@ -125,35 +107,30 @@ select {
 .app-bg::after {
   content: "";
   position: absolute;
-  width: 60vw;
-  height: 60vw;
-  max-width: 480px;
-  max-height: 480px;
+  width: 55vw;
+  height: 55vw;
+  max-width: 420px;
+  max-height: 420px;
   border-radius: 50%;
-  filter: blur(110px);
-  opacity: 0.16;
-}
-
-:root[data-theme="light"] .app-bg::before,
-:root[data-theme="light"] .app-bg::after {
-  opacity: 0.1;
+  filter: blur(100px);
+  opacity: 0.06;
+  background: #1f5c3f;
 }
 
 .app-bg::before {
-  background: #3c6449;
-  top: -10%;
-  right: -20%;
+  top: -12%;
+  right: -18%;
 }
 
 .app-bg::after {
-  background: #6b4a2e;
   bottom: 0%;
-  left: -25%;
-  opacity: 0.1;
+  left: -22%;
+  opacity: 0.045;
 }
 
 .glass {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(16px);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-card);
 }
@@ -177,7 +154,7 @@ select {
   background: var(--accent-grad);
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 4px 16px rgba(123, 47, 247, 0.4);
+  box-shadow: 0 4px 14px rgba(20, 61, 41, 0.28);
 }
 
 .btn {
@@ -201,7 +178,7 @@ select {
 .btn-primary {
   background: var(--accent-grad);
   color: #fff;
-  box-shadow: 0 8px 24px rgba(123, 47, 247, 0.38);
+  box-shadow: 0 8px 20px rgba(20, 61, 41, 0.24);
 }
 
 .btn-secondary {
@@ -216,9 +193,9 @@ select {
 }
 
 .btn-danger {
-  background: rgba(181, 88, 63, 0.14);
+  background: rgba(178, 59, 46, 0.1);
   color: var(--red);
-  border: 1px solid rgba(181, 88, 63, 0.3);
+  border: 1px solid rgba(178, 59, 46, 0.25);
 }
 
 .btn:disabled {
@@ -250,12 +227,12 @@ select {
 }
 
 .badge-new {
-  background: rgba(176, 138, 92, 0.18);
-  color: var(--cyan);
+  background: rgba(31, 92, 63, 0.1);
+  color: var(--accent);
 }
 
 .badge-sale {
-  background: rgba(181, 88, 63, 0.16);
+  background: rgba(178, 59, 46, 0.1);
   color: var(--red);
 }
 
@@ -326,7 +303,7 @@ select {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-hover) 50%, var(--surface-2) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
   border-radius: var(--radius-md);

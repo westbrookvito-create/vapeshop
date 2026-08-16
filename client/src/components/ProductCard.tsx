@@ -15,6 +15,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const addToCart = useCart((s) => s.add);
   const show = useToast((s) => s.show);
   const outOfStock = product.stock <= 0;
+  const hasFlavor = product.flavor && product.flavor !== "—";
 
   return (
     <div
@@ -80,10 +81,34 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
         <div style={{ fontSize: 13.5, fontWeight: 700, lineHeight: 1.25, minHeight: 34 }}>{product.name}</div>
 
+        {(hasFlavor || product.nicotine.length > 0) && (
+          <div className="text-faint" style={{ fontSize: 11, lineHeight: 1.3 }}>
+            {[hasFlavor ? product.flavor : null, product.nicotine.length ? `${product.nicotine.join("/")} мг` : null]
+              .filter(Boolean)
+              .join(" · ")}
+          </div>
+        )}
+
         <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 12 }}>
           <StarIcon size={12} filled />
           <span style={{ fontWeight: 700 }}>{product.rating.toFixed(1)}</span>
           <span className="text-faint">({product.reviewsCount})</span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700 }}>
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: outOfStock ? "var(--red)" : product.stock <= 10 ? "var(--amber)" : "var(--green)",
+              display: "inline-block",
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ color: outOfStock ? "var(--red)" : product.stock <= 10 ? "var(--amber)" : "var(--green)" }}>
+            {outOfStock ? "Нет в наличии" : product.stock <= 10 ? `Осталось ${product.stock} шт.` : "В наличии"}
+          </span>
         </div>
 
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginTop: 4 }}>

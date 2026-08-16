@@ -1,19 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useSession } from "../store/session";
-import { useFavorites } from "../store/favorites";
-import { ReceiptIcon, HeartIcon, BellIcon, SettingsIcon, ChevronRightIcon, WalletIcon } from "../components/Icons";
+import { ReceiptIcon, BellIcon, ChevronRightIcon, GiftIcon } from "../components/Icons";
 
 export default function Profile() {
   const navigate = useNavigate();
   const user = useSession((s) => s.user);
-  const isAdmin = useSession((s) => s.isAdmin);
-  const favCount = useFavorites((s) => s.ids.length);
 
   const initials = `${user?.firstName?.[0] || ""}${user?.lastName?.[0] || ""}`.toUpperCase() || "?";
 
   const menu = [
     { icon: ReceiptIcon, label: "Мои заказы", to: "/orders" },
-    { icon: HeartIcon, label: "Избранное", to: "/favorites", badge: favCount || undefined },
     { icon: BellIcon, label: "Уведомления", to: "#" },
   ];
 
@@ -50,20 +46,23 @@ export default function Profile() {
       </div>
 
       <div style={{ padding: "20px 20px 0" }}>
-        <div
+        <button
+          onClick={() => navigate("/bonuses")}
           style={{
+            width: "100%",
             background: "var(--cyan-grad)",
             borderRadius: "var(--radius-xl)",
             padding: "18px 20px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            color: "#211708",
-            boxShadow: "0 6px 20px rgba(138,98,64,0.22)",
+            color: "#fff",
+            boxShadow: "var(--shadow-glow)",
+            border: "none",
           }}
         >
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", opacity: 0.75 }}>Бонусный счёт</div>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", opacity: 0.8 }}>Бонусный счёт</div>
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 4 }}>{user?.bonusPoints ?? 0} баллов</div>
           </div>
           <div
@@ -71,43 +70,16 @@ export default function Profile() {
               width: 48,
               height: 48,
               borderRadius: 14,
-              background: "rgba(255,255,255,0.25)",
+              background: "rgba(255,255,255,0.2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <WalletIcon size={24} />
+            <GiftIcon size={24} />
           </div>
-        </div>
+        </button>
       </div>
-
-      {isAdmin && (
-        <div style={{ padding: "16px 20px 0" }}>
-          <button
-            onClick={() => navigate("/admin")}
-            className="card"
-            style={{
-              width: "100%",
-              padding: 16,
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              border: "1px solid var(--border-strong)",
-              background: "var(--accent-grad-soft)",
-            }}
-          >
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--accent-grad)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-              <SettingsIcon size={19} />
-            </div>
-            <div style={{ flex: 1, textAlign: "left" }}>
-              <div style={{ fontWeight: 800, fontSize: 14.5 }}>Панель администратора</div>
-              <div className="text-faint" style={{ fontSize: 12 }}>Заказы, товары, статистика</div>
-            </div>
-            <ChevronRightIcon size={18} />
-          </button>
-        </div>
-      )}
 
       <div style={{ padding: "20px 20px 0" }}>
         <div className="card" style={{ padding: 4 }}>
@@ -130,11 +102,6 @@ export default function Profile() {
                 <item.icon size={17} />
               </div>
               <span style={{ flex: 1, textAlign: "left", fontWeight: 700, fontSize: 14 }}>{item.label}</span>
-              {item.badge ? (
-                <span style={{ background: "var(--pink)", color: "#fff", fontSize: 11, fontWeight: 800, borderRadius: 999, padding: "2px 7px" }}>
-                  {item.badge}
-                </span>
-              ) : null}
               <ChevronRightIcon size={17} />
             </button>
           ))}

@@ -52,6 +52,14 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS pickup_points (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  address TEXT NOT NULL,
+  hours TEXT NOT NULL DEFAULT '',
+  is_active INTEGER NOT NULL DEFAULT 1
+);
+
 CREATE TABLE IF NOT EXISTS orders (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
@@ -64,6 +72,7 @@ CREATE TABLE IF NOT EXISTS orders (
   status TEXT NOT NULL DEFAULT 'new',
   delivery_method TEXT NOT NULL DEFAULT 'delivery',
   address TEXT NOT NULL DEFAULT '',
+  pickup_point_id INTEGER REFERENCES pickup_points(id),
   payment_method TEXT NOT NULL DEFAULT 'card',
   promo_code TEXT NOT NULL DEFAULT '',
   comment TEXT NOT NULL DEFAULT '',
@@ -78,6 +87,15 @@ CREATE TABLE IF NOT EXISTS promo_codes (
   usage_limit INTEGER NOT NULL DEFAULT 0,
   used_count INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS wheel_spins (
+  telegram_id INTEGER PRIMARY KEY,
+  segment_index INTEGER NOT NULL,
+  prize_type TEXT NOT NULL,
+  prize_value INTEGER NOT NULL,
+  promo_code TEXT,
+  spun_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS settings (

@@ -127,22 +127,38 @@ function seed() {
   ];
   for (const u of demoUsers) insertUser.run(u);
 
+  // Pickup points
+  const insertPoint = db.prepare("INSERT INTO pickup_points (name, address, hours, is_active) VALUES (?, ?, ?, 1)");
+  const points = [
+    ["ТЦ Галерея, точка №4", "г. Москва, ул. Тверская, 12", "Ежедневно 10:00–22:00"],
+    ["Точка на Арбате", "г. Москва, ул. Арбат, 25", "Ежедневно 11:00–21:00"],
+    ["ТРЦ Vegas", "г. Москва, Каширское шоссе, 61", "Ежедневно 10:00–23:00"],
+  ];
+  const pointIds: number[] = [];
+  for (const [name, address, hours] of points) {
+    const r = insertPoint.run(name, address, hours);
+    pointIds.push(Number(r.lastInsertRowid));
+  }
+  const [point1, point2] = pointIds;
+
   // Demo orders
   const insertOrder = db.prepare(`
-    INSERT INTO orders (user_id, user_name, user_username, items, subtotal, discount, total, status, delivery_method, address, payment_method, promo_code, comment, created_at)
-    VALUES (@user_id, @user_name, @user_username, @items, @subtotal, @discount, @total, @status, @delivery_method, @address, @payment_method, @promo_code, @comment, @created_at)
+    INSERT INTO orders (user_id, user_name, user_username, items, subtotal, discount, total, status, delivery_method, address, pickup_point_id, payment_method, promo_code, comment, created_at)
+    VALUES (@user_id, @user_name, @user_username, @items, @subtotal, @discount, @total, @status, @delivery_method, @address, @pickup_point_id, @payment_method, @promo_code, @comment, @created_at)
   `);
 
   const sampleItems = (rows: { id: number; name: string; price: number; qty: number; flavor?: string }[]) =>
     JSON.stringify(rows);
 
   const demoOrders = [
-    { user_id: 100001, user_name: "Игорь Смирнов", user_username: "igorsmirnov", items: sampleItems([{ id: 1, name: "Elf Bar BC5000", price: 1490, qty: 2, flavor: "Арбуз-лёд" }]), subtotal: 2980, discount: 0, total: 2980, status: "completed", delivery_method: "delivery", address: "г. Москва, ул. Ленина, 12, кв. 45", payment_method: "card", promo_code: "", comment: "", created_at: "2026-08-10 14:22:00" },
-    { user_id: 100002, user_name: "Алина Ковалёва", user_username: "alina_k", items: sampleItems([{ id: 7, name: "Voopoo Drag X2", price: 3990, qty: 1 }, { id: 16, name: "Caliburn G Картридж 2шт", price: 490, qty: 2 }]), subtotal: 4970, discount: 497, total: 4473, status: "shipped", delivery_method: "delivery", address: "г. Санкт-Петербург, Невский пр-т, 88", payment_method: "card", promo_code: "VAPE10", comment: "Курьеру позвонить заранее", created_at: "2026-08-13 09:05:00" },
-    { user_id: 100003, user_name: "Дмитрий Петров", user_username: "dpetrov", items: sampleItems([{ id: 2, name: "HQD Cuvie Air", price: 990, qty: 3, flavor: "Малина-лимонад" }]), subtotal: 2970, discount: 0, total: 2970, status: "processing", delivery_method: "pickup", address: "Самовывоз: ТЦ Галерея, точка №4", payment_method: "cash", promo_code: "", comment: "", created_at: "2026-08-15 17:40:00" },
-    { user_id: 100004, user_name: "Мария Орлова", user_username: "morlova", items: sampleItems([{ id: 6, name: "Waka SoPro PA10000", price: 2190, qty: 1, flavor: "Дыня-лёд" }, { id: 12, name: "Cotton Candy Cloud 60ml", price: 1290, qty: 1, flavor: "Сахарная вата" }]), subtotal: 3480, discount: 696, total: 2784, status: "new", delivery_method: "delivery", address: "г. Казань, ул. Баумана, 3", payment_method: "card", promo_code: "CLOUD20", comment: "", created_at: "2026-08-16 08:12:00" },
-    { user_id: 100001, user_name: "Игорь Смирнов", user_username: "igorsmirnov", items: sampleItems([{ id: 9, name: "Uwell Caliburn G3", price: 2450, qty: 1 }]), subtotal: 2450, discount: 0, total: 2450, status: "cancelled", delivery_method: "delivery", address: "г. Москва, ул. Ленина, 12, кв. 45", payment_method: "card", promo_code: "", comment: "Заказ отменён клиентом", created_at: "2026-08-05 11:00:00" },
-    { user_id: 100002, user_name: "Алина Ковалёва", user_username: "alina_k", items: sampleItems([{ id: 15, name: "Rush Salt Cola Ice", price: 790, qty: 4, flavor: "Кола-лёд" }]), subtotal: 3160, discount: 0, total: 3160, status: "completed", delivery_method: "pickup", address: "Самовывоз: ТЦ Галерея, точка №4", payment_method: "cash", promo_code: "", comment: "", created_at: "2026-08-08 16:20:00" },
+    { user_id: 100001, user_name: "Игорь Смирнов", user_username: "igorsmirnov", items: sampleItems([{ id: 1, name: "Elf Bar BC5000", price: 1490, qty: 2, flavor: "Арбуз-лёд" }]), subtotal: 2980, discount: 0, total: 2980, status: "completed", delivery_method: "delivery", address: "г. Москва, ул. Ленина, 12, кв. 45", pickup_point_id: null, payment_method: "card", promo_code: "", comment: "", created_at: "2026-08-10 14:22:00" },
+    { user_id: 100002, user_name: "Алина Ковалёва", user_username: "alina_k", items: sampleItems([{ id: 7, name: "Voopoo Drag X2", price: 3990, qty: 1 }, { id: 16, name: "Caliburn G Картридж 2шт", price: 490, qty: 2 }]), subtotal: 4970, discount: 497, total: 4473, status: "shipped", delivery_method: "delivery", address: "г. Санкт-Петербург, Невский пр-т, 88", pickup_point_id: null, payment_method: "card", promo_code: "VAPE10", comment: "Курьеру позвонить заранее", created_at: "2026-08-13 09:05:00" },
+    { user_id: 100003, user_name: "Дмитрий Петров", user_username: "dpetrov", items: sampleItems([{ id: 2, name: "HQD Cuvie Air", price: 990, qty: 3, flavor: "Малина-лимонад" }]), subtotal: 2970, discount: 0, total: 2970, status: "processing", delivery_method: "pickup", address: "", pickup_point_id: point1, payment_method: "cash", promo_code: "", comment: "", created_at: "2026-08-15 17:40:00" },
+    { user_id: 100004, user_name: "Мария Орлова", user_username: "morlova", items: sampleItems([{ id: 6, name: "Waka SoPro PA10000", price: 2190, qty: 1, flavor: "Дыня-лёд" }, { id: 12, name: "Cotton Candy Cloud 60ml", price: 1290, qty: 1, flavor: "Сахарная вата" }]), subtotal: 3480, discount: 696, total: 2784, status: "new", delivery_method: "delivery", address: "г. Казань, ул. Баумана, 3", pickup_point_id: null, payment_method: "card", promo_code: "CLOUD20", comment: "", created_at: "2026-08-16 08:12:00" },
+    { user_id: 100001, user_name: "Игорь Смирнов", user_username: "igorsmirnov", items: sampleItems([{ id: 9, name: "Uwell Caliburn G3", price: 2450, qty: 1 }]), subtotal: 2450, discount: 0, total: 2450, status: "cancelled", delivery_method: "delivery", address: "г. Москва, ул. Ленина, 12, кв. 45", pickup_point_id: null, payment_method: "card", promo_code: "", comment: "Заказ отменён клиентом", created_at: "2026-08-05 11:00:00" },
+    { user_id: 100002, user_name: "Алина Ковалёва", user_username: "alina_k", items: sampleItems([{ id: 15, name: "Rush Salt Cola Ice", price: 790, qty: 4, flavor: "Кола-лёд" }]), subtotal: 3160, discount: 0, total: 3160, status: "completed", delivery_method: "pickup", address: "", pickup_point_id: point1, payment_method: "cash", promo_code: "", comment: "", created_at: "2026-08-08 16:20:00" },
+    { user_id: 100001, user_name: "Игорь Смирнов", user_username: "igorsmirnov", items: sampleItems([{ id: 4, name: "Plonq Alpha", price: 890, qty: 2, flavor: "Кола-лёд" }]), subtotal: 1780, discount: 0, total: 1780, status: "completed", delivery_method: "pickup", address: "", pickup_point_id: point2, payment_method: "cash", promo_code: "", comment: "", created_at: "2026-07-20 12:10:00" },
+    { user_id: 100001, user_name: "Игорь Смирнов", user_username: "igorsmirnov", items: sampleItems([{ id: 11, name: "Jam Monster 100ml", price: 1590, qty: 1, flavor: "Клубничный джем" }]), subtotal: 1590, discount: 0, total: 1590, status: "completed", delivery_method: "delivery", address: "г. Москва, ул. Ленина, 12, кв. 45", pickup_point_id: null, payment_method: "card", promo_code: "", comment: "", created_at: "2026-06-30 15:45:00" },
   ];
   for (const o of demoOrders) insertOrder.run(o);
 

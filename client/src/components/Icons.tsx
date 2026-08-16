@@ -288,3 +288,28 @@ export const WrenchIcon = ({ size, strokeWidth }: IconProps) => (
     <path d="M14.5 3.5a5 5 0 0 0-6.6 5.9L3.5 14.8a2 2 0 0 0 2.8 2.8l5.4-4.4a5 5 0 0 0 5.9-6.6l-3.3 3.3-2.6-.9-.9-2.6Z" />
   </svg>
 );
+
+export const GiftIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <rect x="3.5" y="9.5" width="17" height="4" rx="1" />
+    <rect x="5" y="13.5" width="14" height="7.5" rx="1" />
+    <path d="M12 9.5v11.5" />
+    <path d="M12 9.5C10.5 6 8 5 6.7 6.3 5.4 7.6 7 9.5 12 9.5Z" />
+    <path d="M12 9.5C13.5 6 16 5 17.3 6.3c1.3 1.3-.3 3.2-5.3 3.2Z" />
+  </svg>
+);
+
+export const TargetIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <circle cx="12" cy="12" r="8.5" />
+    <circle cx="12" cy="12" r="4.5" />
+    <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+export const LockIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <rect x="5" y="10.5" width="14" height="9.5" rx="2" />
+    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+  </svg>
+);

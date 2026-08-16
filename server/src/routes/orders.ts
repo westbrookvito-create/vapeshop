@@ -6,25 +6,30 @@ export const ordersRouter = Router();
 
 const STATUSES = ["new", "confirmed", "processing", "shipped", "completed", "cancelled"];
 
+const SELECT_WITH_POINT = `
+  SELECT o.*, pp.name as pickup_point_name, pp.address as pickup_point_address, pp.hours as pickup_point_hours
+  FROM orders o LEFT JOIN pickup_points pp ON pp.id = o.pickup_point_id
+`;
+
 ordersRouter.get("/", (req, res) => {
   const { userId, status } = req.query as Record<string, string | undefined>;
-  let sql = "SELECT * FROM orders WHERE 1=1";
+  let sql = `${SELECT_WITH_POINT} WHERE 1=1`;
   const args: any[] = [];
   if (userId) {
-    sql += " AND user_id = ?";
+    sql += " AND o.user_id = ?";
     args.push(Number(userId));
   }
   if (status) {
-    sql += " AND status = ?";
+    sql += " AND o.status = ?";
     args.push(status);
   }
-  sql += " ORDER BY id DESC";
+  sql += " ORDER BY o.id DESC";
   const rows = db.prepare(sql).all(...args) as any[];
   res.json(rows.map(formatOrder));
 });
 
 ordersRouter.get("/:id", (req, res) => {
-  const row = db.prepare("SELECT * FROM orders WHERE id = ?").get(req.params.id) as any;
+  const row = db.prepare(`${SELECT_WITH_POINT} WHERE o.id = ?`).get(req.params.id) as any;
   if (!row) return res.status(404).json({ error: "not_found" });
   res.json(formatOrder(row));
 });
@@ -32,8 +37,8 @@ ordersRouter.get("/:id", (req, res) => {
 ordersRouter.post("/", (req, res) => {
   const b = req.body;
   const info = db.prepare(`
-    INSERT INTO orders (user_id, user_name, user_username, items, subtotal, discount, total, status, delivery_method, address, payment_method, promo_code, comment)
-    VALUES (@user_id, @user_name, @user_username, @items, @subtotal, @discount, @total, 'new', @delivery_method, @address, @payment_method, @promo_code, @comment)
+    INSERT INTO orders (user_id, user_name, user_username, items, subtotal, discount, total, status, delivery_method, address, pickup_point_id, payment_method, promo_code, comment)
+    VALUES (@user_id, @user_name, @user_username, @items, @subtotal, @discount, @total, 'new', @delivery_method, @address, @pickup_point_id, @payment_method, @promo_code, @comment)
   `).run({
     user_id: b.userId,
     user_name: b.userName || "",
@@ -44,6 +49,7 @@ ordersRouter.post("/", (req, res) => {
     total: b.total,
     delivery_method: b.deliveryMethod || "delivery",
     address: b.address || "",
+    pickup_point_id: b.pickupPointId ?? null,
     payment_method: b.paymentMethod || "card",
     promo_code: b.promoCode || "",
     comment: b.comment || "",
@@ -53,7 +59,7 @@ ordersRouter.post("/", (req, res) => {
     db.prepare("UPDATE promo_codes SET used_count = used_count + 1 WHERE code = ?").run(b.promoCode);
   }
 
-  const row = db.prepare("SELECT * FROM orders WHERE id = ?").get(info.lastInsertRowid);
+  const row = db.prepare(`${SELECT_WITH_POINT} WHERE o.id = ?`).get(info.lastInsertRowid);
   const order = formatOrder(row);
   notifyNewOrder(order).catch(() => {});
   res.status(201).json(order);
@@ -65,7 +71,7 @@ ordersRouter.patch("/:id/status", (req, res) => {
   const existing = db.prepare("SELECT * FROM orders WHERE id = ?").get(req.params.id);
   if (!existing) return res.status(404).json({ error: "not_found" });
   db.prepare("UPDATE orders SET status = ? WHERE id = ?").run(status, req.params.id);
-  const row = db.prepare("SELECT * FROM orders WHERE id = ?").get(req.params.id);
+  const row = db.prepare(`${SELECT_WITH_POINT} WHERE o.id = ?`).get(req.params.id);
   res.json(formatOrder(row));
 });
 
@@ -82,6 +88,9 @@ function formatOrder(row: any) {
     status: row.status,
     deliveryMethod: row.delivery_method,
     address: row.address,
+    pickupPoint: row.pickup_point_id
+      ? { id: row.pickup_point_id, name: row.pickup_point_name, address: row.pickup_point_address, hours: row.pickup_point_hours }
+      : null,
     paymentMethod: row.payment_method,
     promoCode: row.promo_code,
     comment: row.comment,

@@ -90,7 +90,17 @@ export default function OrderDetail() {
         <div>
           <div className="label">Информация о доставке</div>
           <div className="card" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
-            <InfoRow icon={order.deliveryMethod === "delivery" ? <TruckIcon size={16} /> : <BoxIcon size={16} />} label={order.deliveryMethod === "delivery" ? "Доставка" : "Самовывоз"} value={order.address} />
+            <InfoRow
+              icon={order.deliveryMethod === "delivery" ? <TruckIcon size={16} /> : <BoxIcon size={16} />}
+              label={order.deliveryMethod === "delivery" ? "Доставка" : "Самовывоз"}
+              value={
+                order.deliveryMethod === "delivery"
+                  ? order.address
+                  : order.pickupPoint
+                  ? `${order.pickupPoint.name}, ${order.pickupPoint.address}`
+                  : order.address
+              }
+            />
             <InfoRow icon={<WalletIcon size={16} />} label="Оплата" value={order.paymentMethod === "card" ? "Картой онлайн" : "Наличными при получении"} />
             {order.comment && !cancelled && <InfoRow icon={<MessageIcon size={16} />} label="Комментарий" value={order.comment} />}
           </div>
