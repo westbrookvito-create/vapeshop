@@ -195,7 +195,11 @@ export default function Checkout() {
 
         <div className="card" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
           <Row label="Сумма товаров" value={formatPrice(subtotal)} />
-          <Row label="Доставка" value={delivery === 0 ? "Бесплатно" : formatPrice(delivery)} />
+          {deliveryMethod === "delivery" ? (
+            <Row label="Доставка" value={delivery === 0 ? "Бесплатно" : formatPrice(delivery)} />
+          ) : (
+            <Row label="Самовывоз" value="Бесплатно" />
+          )}
           {discount > 0 && <Row label="Скидка" value={`-${formatPrice(discount)}`} highlight />}
           <div style={{ height: 1, background: "var(--border)" }} />
           <Row label="Итого" value={formatPrice(total)} big />

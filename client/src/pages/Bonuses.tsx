@@ -165,7 +165,7 @@ function Wheel({ segments, rotation, spinning }: { segments: WheelState["segment
                 left: "50%",
                 width: 110,
                 textAlign: "center",
-                transform: `rotate(${angle}deg) translate(0, -108px) rotate(0deg)`,
+                transform: `rotate(${angle}deg) translate(0, -108px) rotate(${angle > 90 && angle < 270 ? 180 : 0}deg)`,
                 transformOrigin: "0 0",
                 marginLeft: -55,
                 color: s.type === "none" ? "var(--text-dim)" : "#fff",
