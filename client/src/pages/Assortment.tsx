@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, type Category, type Product } from "../lib/api";
-import { useSession } from "../store/session";
 import ProductCard from "../components/ProductCard";
 import { ProductGridSkeleton } from "../components/Skeletons";
 import EmptyState from "../components/EmptyState";
@@ -11,8 +10,9 @@ import Sheet from "../components/Sheet";
 
 type SortKey = "popular" | "price_asc" | "price_desc" | "new";
 
+const SHOP_NAME = "TestVape";
+
 export default function Assortment() {
-  const user = useSession((s) => s.user);
   const [params, setParams] = useSearchParams();
   const categoryId = params.get("category") ? Number(params.get("category")) : undefined;
 
@@ -60,7 +60,7 @@ export default function Assortment() {
     <div className="page">
       <div style={{ padding: "calc(var(--safe-top) + 18px) 20px 4px" }}>
         <div className="text-faint" style={{ fontSize: 12.5, fontWeight: 600 }}>
-          С возвращением{user?.firstName ? `, ${user.firstName}` : ""}
+          {SHOP_NAME}
         </div>
         <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", marginTop: 2, marginBottom: 14 }}>Ассортимент</div>
 
