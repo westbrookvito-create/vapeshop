@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone TEXT NOT NULL DEFAULT '',
   bonus_points INTEGER NOT NULL DEFAULT 0,
   is_banned INTEGER NOT NULL DEFAULT 0,
+  age_confirmed INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -103,6 +104,13 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT NOT NULL
 );
 `);
+
+// Lightweight migration for databases created before age_confirmed existed.
+try {
+  db.exec("ALTER TABLE users ADD COLUMN age_confirmed INTEGER NOT NULL DEFAULT 0");
+} catch {
+  // column already exists
+}
 
 export function seedIfEmpty() {
   const row = db.prepare("SELECT COUNT(*) as c FROM categories").get() as { c: number };
