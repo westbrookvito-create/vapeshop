@@ -113,6 +113,8 @@ export default function Profile() {
           CloudBar Vape Shop · 18+
           <br />
           Продукция содержит никотин, вызывает привыкание
+          <br />
+          разработка by @cherokky
         </div>
       </div>
     </div>
