@@ -97,6 +97,8 @@ export async function notifyNewOrder(order: {
   deliveryMethod: string;
   address: string;
   pickupPoint?: { name: string; address: string } | null;
+  pickupTime?: string | null;
+  pickupCode?: string | null;
   paymentMethod: string;
 }) {
   if (!bot) return;
@@ -104,12 +106,15 @@ export async function notifyNewOrder(order: {
   const deliveryLine =
     order.deliveryMethod === "delivery"
       ? `Доставка курьером: ${order.address}`
-      : `Самовывоз: ${order.pickupPoint ? `${order.pickupPoint.name}, ${order.pickupPoint.address}` : order.address}`;
+      : `Самовывоз: ${order.pickupPoint ? `${order.pickupPoint.name}, ${order.pickupPoint.address}` : order.address}${
+          order.pickupTime ? ` · ${order.pickupTime}` : ""
+        }`;
   const text =
     `Новый заказ #${order.id}\n\n` +
     `${lines.join("\n")}\n\n` +
     `Итого: ${order.total}₽\n` +
     `${deliveryLine}\n` +
+    (order.pickupCode ? `Код выдачи: ${order.pickupCode}\n` : "") +
     `Оплата: ${order.paymentMethod === "card" ? "картой" : "наличными"}\n` +
     `Клиент: ${order.userName}${order.userUsername ? ` (@${order.userUsername})` : ""}`;
   const keyboard = new InlineKeyboard().text("Открыть заказ", `o:view:${order.id}`);

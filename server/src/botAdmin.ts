@@ -31,6 +31,7 @@ type Order = {
   id: number; userName: string; userUsername: string; items: { name: string; qty: number; price: number; flavor?: string }[];
   subtotal: number; discount: number; total: number; status: string; deliveryMethod: string; address: string;
   pickupPoint: { id: number; name: string; address: string; hours: string } | null;
+  pickupTime: string | null; pickupCode: string | null;
   paymentMethod: string; promoCode: string; comment: string; createdAt: string;
 };
 type PromoCode = { id: number; code: string; discountPercent: number; active: boolean; usageLimit: number; usedCount: number };
@@ -73,6 +74,7 @@ interface SessionData {
   addCategory?: AddCategoryState;
   renameCategory?: RenameCategoryState;
   addPoint?: AddPointState;
+  pickupCodeLookup?: boolean;
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
@@ -99,6 +101,7 @@ function clearWizards(ctx: BotContext) {
   ctx.session.addCategory = undefined;
   ctx.session.renameCategory = undefined;
   ctx.session.addPoint = undefined;
+  ctx.session.pickupCodeLookup = undefined;
 }
 
 function money(n: number): string {
@@ -120,6 +123,8 @@ function mainMenuKeyboard() {
     .text("Товары", "m:products").text("Заказы", "m:orders")
     .row()
     .text("Добавить товар", "m:addproduct")
+    .row()
+    .text("Выдача по коду", "m:pickupcode")
     .row()
     .text("Категории", "m:categories").text("Точки самовывоза", "m:points")
     .row()
@@ -217,6 +222,10 @@ async function renderOrderDetail(id: number) {
     `${o.deliveryMethod === "delivery" ? "Доставка" : "Самовывоз"}: ${
       o.deliveryMethod === "pickup" && o.pickupPoint ? `${o.pickupPoint.name}, ${o.pickupPoint.address}` : o.address
     }`,
+    o.deliveryMethod === "pickup" && o.pickupTime ? `Время самовывоза: ${o.pickupTime}` : null,
+    o.deliveryMethod === "pickup" && o.pickupCode && o.status !== "completed" && o.status !== "cancelled"
+      ? `Код выдачи: ${o.pickupCode}`
+      : null,
     `Оплата: ${o.paymentMethod === "card" ? "картой" : "наличными"}`,
     o.comment ? `Комментарий: ${o.comment}` : null,
   ].filter(Boolean);
@@ -411,6 +420,13 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
     const { text, kb } = await renderOrderDetail(id);
     await ctx.editMessageText(text, { reply_markup: kb });
     await ctx.answerCallbackQuery({ text: `Статус: ${STATUS_LABELS[status]}` });
+  });
+
+  bot.callbackQuery("m:pickupcode", adminOnly, async (ctx) => {
+    clearWizards(ctx);
+    ctx.session.pickupCodeLookup = true;
+    await ctx.reply("Введите 6-значный код выдачи, который назвал покупатель:");
+    await ctx.answerCallbackQuery();
   });
 
   bot.callbackQuery("m:stats", adminOnly, async (ctx) => {
@@ -682,6 +698,8 @@ export function registerAdminHandlers(bot: Bot<BotContext>) {
     const pointWiz = ctx.session.addPoint;
     if (pointWiz) return handlePointWizardText(ctx, pointWiz, text);
 
+    if (ctx.session.pickupCodeLookup) return handlePickupCodeText(ctx, text);
+
     const wiz = ctx.session.addProduct;
     if (!wiz) return;
     await handleProductWizardText(ctx, wiz, text);
@@ -859,6 +877,30 @@ async function handleRenameCategoryText(ctx: BotContext, wiz: RenameCategoryStat
     await ctx.reply("Не удалось переименовать категорию.");
   }
   ctx.session.renameCategory = undefined;
+}
+
+async function handlePickupCodeText(ctx: BotContext, text: string) {
+  const code = text.replace(/\D/g, "");
+  if (code.length !== 6) {
+    await ctx.reply("Код должен состоять из 6 цифр. Попробуйте ещё раз или отправьте /cancel:");
+    return;
+  }
+  try {
+    const order = await api<Order>(`/orders/by-code/${code}`);
+    ctx.session.pickupCodeLookup = undefined;
+    if (order.status === "completed") {
+      await ctx.reply(`Заказ #${order.id} по этому коду уже выдан.`, { reply_markup: backButton("m:home") });
+      return;
+    }
+    if (order.status === "cancelled") {
+      await ctx.reply(`Заказ #${order.id} по этому коду отменён.`, { reply_markup: backButton("m:home") });
+      return;
+    }
+    const { text: detailText, kb } = await renderOrderDetail(order.id);
+    await ctx.reply(`Найден заказ по коду ${code}:\n\n${detailText}`, { reply_markup: kb });
+  } catch {
+    await ctx.reply("Заказ с таким кодом не найден. Проверьте код или отправьте /cancel:");
+  }
 }
 
 async function handlePointWizardText(ctx: BotContext, wiz: AddPointState, text: string) {

@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { api, type Order } from "../lib/api";
 import { formatDate, formatPrice, STATUS_LABELS } from "../lib/format";
 import Header from "../components/Header";
-import { CheckIcon, TruckIcon, BoxIcon, WalletIcon, MessageIcon } from "../components/Icons";
+import { CheckIcon, TruckIcon, BoxIcon, WalletIcon, MessageIcon, ClockIcon } from "../components/Icons";
 
 const FLOW = ["new", "confirmed", "processing", "shipped", "completed"];
 
@@ -71,6 +71,20 @@ export default function OrderDetail() {
           </div>
         )}
 
+        {!cancelled && order.deliveryMethod === "pickup" && order.pickupCode && order.status !== "completed" && (
+          <div className="card" style={{ padding: 18, textAlign: "center", background: "var(--accent-grad)", color: "#fff" }}>
+            <div style={{ fontSize: 11.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", opacity: 0.85 }}>
+              Код получения
+            </div>
+            <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: "0.08em", marginTop: 6 }}>
+              {order.pickupCode}
+            </div>
+            <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 6 }}>
+              Назовите этот код при получении заказа
+            </div>
+          </div>
+        )}
+
         <div>
           <div className="label">Товары</div>
           <div className="card" style={{ padding: 4 }}>
@@ -101,6 +115,9 @@ export default function OrderDetail() {
                   : order.address
               }
             />
+            {order.deliveryMethod === "pickup" && order.pickupTime && (
+              <InfoRow icon={<ClockIcon size={16} />} label="Время самовывоза" value={order.pickupTime} />
+            )}
             <InfoRow icon={<WalletIcon size={16} />} label="Оплата" value={order.paymentMethod === "card" ? "Картой онлайн" : "Наличными при получении"} />
             {order.comment && !cancelled && <InfoRow icon={<MessageIcon size={16} />} label="Комментарий" value={order.comment} />}
           </div>

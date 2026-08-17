@@ -6,9 +6,20 @@ import { api, type PickupPoint } from "../lib/api";
 import { formatPrice } from "../lib/format";
 import Header from "../components/Header";
 import Sheet from "../components/Sheet";
-import { TruckIcon, BoxIcon, WalletIcon, CheckIcon, MapPinIcon, BanknoteIcon, ChevronRightIcon } from "../components/Icons";
+import { TruckIcon, BoxIcon, WalletIcon, CheckIcon, MapPinIcon, BanknoteIcon, ChevronRightIcon, ClockIcon } from "../components/Icons";
 import { useToast } from "../store/toast";
 import { hapticNotify } from "../lib/telegram";
+
+function getPickupSlots(): string[] {
+  const slots = ["Как можно скорее"];
+  const startHour = new Date().getHours() + 1;
+  for (let i = 0; i < 4; i++) {
+    const h = startHour + i;
+    if (h >= 23) break;
+    slots.push(`${String(h).padStart(2, "0")}:00–${String(h + 1).padStart(2, "0")}:00`);
+  }
+  return slots;
+}
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -29,6 +40,8 @@ export default function Checkout() {
   const [points, setPoints] = useState<PickupPoint[]>([]);
   const [pointId, setPointId] = useState<number | null>(null);
   const [pointSheetOpen, setPointSheetOpen] = useState(false);
+  const [pickupSlots] = useState<string[]>(getPickupSlots);
+  const [pickupTime, setPickupTime] = useState(pickupSlots[0]);
 
   useEffect(() => {
     api.pickupPoints.list().then((rows) => {
@@ -79,6 +92,7 @@ export default function Checkout() {
         deliveryMethod,
         address: deliveryMethod === "delivery" ? address : "",
         pickupPointId: deliveryMethod === "pickup" ? pointId : null,
+        pickupTime: deliveryMethod === "pickup" ? pickupTime : undefined,
         paymentMethod,
         promoCode: promo?.code || "",
         comment,
@@ -143,6 +157,20 @@ export default function Checkout() {
               </div>
               {points.length > 1 && <ChevronRightIcon size={17} />}
             </button>
+
+            <div className="label" style={{ marginTop: 16 }}>Время получения</div>
+            <div className="hide-scrollbar" style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2 }}>
+              {pickupSlots.map((slot) => (
+                <button
+                  key={slot}
+                  onClick={() => setPickupTime(slot)}
+                  className={`chip ${pickupTime === slot ? "active" : ""}`}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}
+                >
+                  {slot === pickupSlots[0] ? <ClockIcon size={13} /> : null} {slot}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

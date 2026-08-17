@@ -317,3 +317,10 @@ export const LockIcon = ({ size, strokeWidth }: IconProps) => (
     <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
   </svg>
 );
+
+export const ClockIcon = ({ size, strokeWidth }: IconProps) => (
+  <svg {...base(size, strokeWidth)}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3.2 2" />
+  </svg>
+);

@@ -74,6 +74,8 @@ CREATE TABLE IF NOT EXISTS orders (
   delivery_method TEXT NOT NULL DEFAULT 'delivery',
   address TEXT NOT NULL DEFAULT '',
   pickup_point_id INTEGER REFERENCES pickup_points(id),
+  pickup_time TEXT NOT NULL DEFAULT '',
+  pickup_code TEXT,
   payment_method TEXT NOT NULL DEFAULT 'card',
   promo_code TEXT NOT NULL DEFAULT '',
   comment TEXT NOT NULL DEFAULT '',
@@ -103,14 +105,23 @@ CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+
 `);
 
-// Lightweight migration for databases created before age_confirmed existed.
-try {
-  db.exec("ALTER TABLE users ADD COLUMN age_confirmed INTEGER NOT NULL DEFAULT 0");
-} catch {
-  // column already exists
+// Lightweight migrations for databases created before these columns existed.
+for (const stmt of [
+  "ALTER TABLE users ADD COLUMN age_confirmed INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE orders ADD COLUMN pickup_time TEXT NOT NULL DEFAULT ''",
+  "ALTER TABLE orders ADD COLUMN pickup_code TEXT",
+]) {
+  try {
+    db.exec(stmt);
+  } catch {
+    // column already exists
+  }
 }
+
+db.exec("CREATE INDEX IF NOT EXISTS idx_orders_pickup_code ON orders(pickup_code);");
 
 export function seedIfEmpty() {
   const row = db.prepare("SELECT COUNT(*) as c FROM categories").get() as { c: number };

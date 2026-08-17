@@ -11,6 +11,17 @@ const SELECT_WITH_POINT = `
   FROM orders o LEFT JOIN pickup_points pp ON pp.id = o.pickup_point_id
 `;
 
+function generatePickupCode(): string {
+  for (let i = 0; i < 20; i++) {
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const clash = db
+      .prepare("SELECT id FROM orders WHERE pickup_code = ? AND status NOT IN ('completed','cancelled')")
+      .get(code);
+    if (!clash) return code;
+  }
+  return String(Date.now()).slice(-6);
+}
+
 ordersRouter.get("/", (req, res) => {
   const { userId, status } = req.query as Record<string, string | undefined>;
   let sql = `${SELECT_WITH_POINT} WHERE 1=1`;
@@ -28,6 +39,12 @@ ordersRouter.get("/", (req, res) => {
   res.json(rows.map(formatOrder));
 });
 
+ordersRouter.get("/by-code/:code", (req, res) => {
+  const row = db.prepare(`${SELECT_WITH_POINT} WHERE o.pickup_code = ?`).get(req.params.code.trim()) as any;
+  if (!row) return res.status(404).json({ error: "not_found" });
+  res.json(formatOrder(row));
+});
+
 ordersRouter.get("/:id", (req, res) => {
   const row = db.prepare(`${SELECT_WITH_POINT} WHERE o.id = ?`).get(req.params.id) as any;
   if (!row) return res.status(404).json({ error: "not_found" });
@@ -36,9 +53,10 @@ ordersRouter.get("/:id", (req, res) => {
 
 ordersRouter.post("/", (req, res) => {
   const b = req.body;
+  const isPickup = (b.deliveryMethod || "delivery") === "pickup";
   const info = db.prepare(`
-    INSERT INTO orders (user_id, user_name, user_username, items, subtotal, discount, total, status, delivery_method, address, pickup_point_id, payment_method, promo_code, comment)
-    VALUES (@user_id, @user_name, @user_username, @items, @subtotal, @discount, @total, 'new', @delivery_method, @address, @pickup_point_id, @payment_method, @promo_code, @comment)
+    INSERT INTO orders (user_id, user_name, user_username, items, subtotal, discount, total, status, delivery_method, address, pickup_point_id, pickup_time, pickup_code, payment_method, promo_code, comment)
+    VALUES (@user_id, @user_name, @user_username, @items, @subtotal, @discount, @total, 'new', @delivery_method, @address, @pickup_point_id, @pickup_time, @pickup_code, @payment_method, @promo_code, @comment)
   `).run({
     user_id: b.userId,
     user_name: b.userName || "",
@@ -50,6 +68,8 @@ ordersRouter.post("/", (req, res) => {
     delivery_method: b.deliveryMethod || "delivery",
     address: b.address || "",
     pickup_point_id: b.pickupPointId ?? null,
+    pickup_time: isPickup ? b.pickupTime || "" : "",
+    pickup_code: isPickup ? generatePickupCode() : null,
     payment_method: b.paymentMethod || "card",
     promo_code: b.promoCode || "",
     comment: b.comment || "",
@@ -91,6 +111,8 @@ function formatOrder(row: any) {
     pickupPoint: row.pickup_point_id
       ? { id: row.pickup_point_id, name: row.pickup_point_name, address: row.pickup_point_address, hours: row.pickup_point_hours }
       : null,
+    pickupTime: row.pickup_time || null,
+    pickupCode: row.pickup_code || null,
     paymentMethod: row.payment_method,
     promoCode: row.promo_code,
     comment: row.comment,

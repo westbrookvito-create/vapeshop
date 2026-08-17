@@ -62,6 +62,8 @@ export type Order = {
   deliveryMethod: "delivery" | "pickup";
   address: string;
   pickupPoint: { id: number; name: string; address: string; hours: string } | null;
+  pickupTime: string | null;
+  pickupCode: string | null;
   paymentMethod: "card" | "cash";
   promoCode: string;
   comment: string;
