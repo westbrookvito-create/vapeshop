@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Кабинет чаттера</title>
+<title>Chatter Dashboard</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,31 +15,31 @@
     <nav class="nav">
       <button class="nav-item active" data-view="overview">
         <svg viewBox="0 0 24 24"><path d="M3 13h4v8H3zM10 3h4v18h-4zM17 8h4v13h-4z"/></svg>
-        Обзор
+        Overview
       </button>
       <button class="nav-item" data-view="chats">
         <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-        Мои чаты
+        My Chats
         <span class="nav-badge">11</span>
       </button>
       <button class="nav-item" data-view="stats">
         <svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l3-4 3 3 5-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Статистика
+        Statistics
       </button>
       <button class="nav-item" data-view="payouts">
         <svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 10.5h19" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="14.5" r="1.2" fill="currentColor"/></svg>
-        Выплаты
+        Payouts
       </button>
       <button class="nav-item" data-view="settings">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13a7.9 7.9 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.9 7.9 0 0 0-1.7-1L15 3h-4l-.3 2.9a7.9 7.9 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.9 7.9 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.9 7.9 0 0 0 1.7 1L11 21h4l.3-2.9a7.9 7.9 0 0 0 1.7-1l2.5 1 2-3.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-        Настройки
+        Settings
       </button>
     </nav>
 
     <div class="sidebar-footer">
       <div class="shift-card">
-        <div class="shift-row"><span>Смена</span><b>17:00 – 01:00</b></div>
-        <div class="shift-row"><span>Отработано</span><b>4ч 12м</b></div>
+        <div class="shift-row"><span>Shift</span><b>17:00 – 01:00</b></div>
+        <div class="shift-row"><span>Worked</span><b>4h 12m</b></div>
         <div class="shift-bar"><span style="width:52%"></span></div>
       </div>
     </div>
@@ -50,24 +50,24 @@
 
     <header class="topbar">
       <div class="topbar-left">
-        <h1 id="view-title">Обзор</h1>
-        <p id="view-subtitle">Твоя статистика за выбранный период</p>
+        <h1 id="view-title">Overview</h1>
+        <p id="view-subtitle">Your stats for the selected period</p>
       </div>
       <div class="topbar-right">
         <div class="range-switch">
-          <button class="range-btn">24ч</button>
-          <button class="range-btn active">7 дней</button>
-          <button class="range-btn">30 дней</button>
+          <button class="range-btn">24h</button>
+          <button class="range-btn active">7 days</button>
+          <button class="range-btn">30 days</button>
         </div>
-        <button class="icon-btn" title="Уведомления">
+        <button class="icon-btn" title="Notifications">
           <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 0 1-3.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           <span class="dot-alert"></span>
         </button>
         <div class="user-chip">
-          <div class="avatar">МС</div>
+          <div class="avatar" id="user-avatar">MS</div>
           <div class="user-chip-text">
-            <strong>Марина Соколова</strong>
-            <span>Чаттер · ночная смена</span>
+            <strong id="user-name">Marina Sokolova</strong>
+            <span>Chatter · night shift</span>
           </div>
         </div>
       </div>
@@ -80,38 +80,38 @@
 
         <div class="kpi-grid">
           <div class="kpi-card">
-            <span class="kpi-label">Заработано сегодня</span>
-            <div class="kpi-value">$186</div>
-            <div class="kpi-trend up">▲ 9% <span>vs вчера</span></div>
+            <span class="kpi-label">Earned today</span>
+            <div class="kpi-value" id="kpi-earned-today">$186</div>
+            <div class="kpi-trend up">▲ 9% <span>vs yesterday</span></div>
           </div>
 
           <div class="kpi-card">
-            <span class="kpi-label">Заработано за 7 дней</span>
-            <div class="kpi-value">$1,240</div>
-            <div class="kpi-trend up">▲ 4.6% <span>vs пред. неделя</span></div>
+            <span class="kpi-label">Earned this week</span>
+            <div class="kpi-value" id="kpi-earned-week">$1,240</div>
+            <div class="kpi-trend up">▲ 4.6% <span>vs last week</span></div>
           </div>
 
           <div class="kpi-card">
-            <span class="kpi-label">Заработано за 30 дней</span>
-            <div class="kpi-value">$5,380</div>
-            <div class="kpi-trend down">▼ 2.1% <span>vs пред. месяц</span></div>
+            <span class="kpi-label">Earned this month</span>
+            <div class="kpi-value" id="kpi-earned-month">$5,380</div>
+            <div class="kpi-trend down">▼ 2.1% <span>vs last month</span></div>
           </div>
 
           <div class="kpi-card">
-            <span class="kpi-label">Сообщений сегодня</span>
-            <div class="kpi-value">342</div>
-            <div class="kpi-trend">58 / час</div>
+            <span class="kpi-label">Messages today</span>
+            <div class="kpi-value" id="kpi-messages-today">342</div>
+            <div class="kpi-trend">58 / hour</div>
           </div>
 
           <div class="kpi-card">
-            <span class="kpi-label">PPV продано сегодня</span>
-            <div class="kpi-value">7</div>
-            <div class="kpi-trend up">▲ 2 <span>vs вчера</span></div>
+            <span class="kpi-label">PPV sold today</span>
+            <div class="kpi-value" id="kpi-ppv-today">7</div>
+            <div class="kpi-trend up">▲ 2 <span>vs yesterday</span></div>
           </div>
 
           <div class="kpi-card">
-            <span class="kpi-label">Средний чек</span>
-            <div class="kpi-value">$38</div>
+            <span class="kpi-label">Average sale</span>
+            <div class="kpi-value" id="kpi-avg-check">$38</div>
             <div class="kpi-trend down">▼ $1.40</div>
           </div>
         </div>
@@ -120,8 +120,8 @@
           <div class="card chart-card">
             <div class="card-head">
               <div>
-                <h3>Мой заработок</h3>
-                <p>Последние 14 дней</p>
+                <h3>My Earnings</h3>
+                <p>Last 14 days</p>
               </div>
             </div>
             <canvas id="chart-revenue"></canvas>
@@ -130,11 +130,11 @@
           <div class="card chart-card">
             <div class="card-head">
               <div>
-                <h3>Доход по дням</h3>
-                <p>Донаты и PPV</p>
+                <h3>Earnings by Day</h3>
+                <p>Tips and PPV</p>
               </div>
               <div class="legend">
-                <span><i class="dot green"></i>Донаты</span>
+                <span><i class="dot green"></i>Tips</span>
                 <span><i class="dot red"></i>PPV</span>
               </div>
             </div>
@@ -146,13 +146,13 @@
           <div class="card">
             <div class="card-head">
               <div>
-                <h3>Мои модели сегодня</h3>
-                <p>Кому пишу в эту смену</p>
+                <h3>My Models Today</h3>
+                <p>Who I'm chatting with this shift</p>
               </div>
             </div>
             <div class="table-wrap">
               <table class="table">
-                <thead><tr><th>Модель</th><th>Платформа</th><th>Сообщений</th><th>Заработано</th></tr></thead>
+                <thead><tr><th>Model</th><th>Platform</th><th>Messages</th><th>Earned</th></tr></thead>
                 <tbody id="my-models-body"></tbody>
               </table>
             </div>
@@ -161,8 +161,8 @@
           <div class="card">
             <div class="card-head">
               <div>
-                <h3>Последние поступления</h3>
-                <p>Обновлено 2 мин назад</p>
+                <h3>Recent Activity</h3>
+                <p>Updated 2 min ago</p>
               </div>
             </div>
             <div class="activity-feed" id="activity-feed"></div>
@@ -175,12 +175,12 @@
         <div class="grid-2">
           <div class="card chart-card">
             <div class="card-head">
-              <div><h3>Донаты vs PPV</h3><p>Распределение за 30 дней</p></div>
+              <div><h3>Tips vs PPV</h3><p>Split over the last 30 days</p></div>
             </div>
             <div class="donut-wrap">
               <div class="donut-canvas-box"><canvas id="chart-split"></canvas></div>
               <div class="donut-legend">
-                <div><i class="dot green"></i>Донаты <strong>41%</strong><span>$2,206</span></div>
+                <div><i class="dot green"></i>Tips <strong>41%</strong><span>$2,206</span></div>
                 <div><i class="dot red"></i>PPV <strong>59%</strong><span>$3,174</span></div>
               </div>
             </div>
@@ -188,26 +188,26 @@
 
           <div class="card">
             <div class="card-head">
-              <div><h3>Моя воронка</h3><p>От сообщения до оплаты</p></div>
+              <div><h3>My Funnel</h3><p>From message to payment</p></div>
             </div>
             <div class="funnel">
               <div class="funnel-row">
-                <span>Сообщений отправлено</span>
+                <span>Messages sent</span>
                 <div class="funnel-bar"><span style="width:100%"></span></div>
                 <b>2,140</b>
               </div>
               <div class="funnel-row">
-                <span>PPV предложен</span>
+                <span>PPV offered</span>
                 <div class="funnel-bar"><span style="width:30%"></span></div>
                 <b>642 · 30%</b>
               </div>
               <div class="funnel-row">
-                <span>PPV открыт</span>
+                <span>PPV opened</span>
                 <div class="funnel-bar"><span style="width:19%"></span></div>
                 <b>407 · 19%</b>
               </div>
               <div class="funnel-row">
-                <span>PPV куплен</span>
+                <span>PPV purchased</span>
                 <div class="funnel-bar accent"><span style="width:10%"></span></div>
                 <b>214 · 10%</b>
               </div>
@@ -217,13 +217,13 @@
 
         <div class="card">
           <div class="card-head">
-            <div><h3>Мои топ клиенты</h3><p>Самые крупные покупатели за 30 дней</p></div>
-            <input class="table-search" placeholder="Поиск по нику...">
+            <div><h3>My Top Clients</h3><p>Biggest spenders in the last 30 days</p></div>
+            <input class="table-search" placeholder="Search by username...">
           </div>
           <div class="table-wrap">
             <table class="table">
               <thead>
-                <tr><th>Пользователь</th><th>Модель</th><th>Платформа</th><th>Потрачено</th><th>Покупок</th><th>Последняя покупка</th></tr>
+                <tr><th>User</th><th>Model</th><th>Platform</th><th>Spent</th><th>Purchases</th><th>Last purchase</th></tr>
               </thead>
               <tbody id="spenders-body"></tbody>
             </table>
@@ -235,12 +235,12 @@
       <section class="view" id="view-chats">
         <div class="card">
           <div class="card-head">
-            <div><h3>Мои диалоги</h3><p>Назначенные на меня в эту смену</p></div>
+            <div><h3>My Chats</h3><p>Assigned to me this shift</p></div>
             <div class="chip-filters">
-              <button class="chip active">Все (11)</button>
-              <button class="chip">Ждут ответа (3)</button>
-              <button class="chip">Горячие (4)</button>
-              <button class="chip">PPV отправлен (2)</button>
+              <button class="chip active">All (11)</button>
+              <button class="chip">Waiting reply (3)</button>
+              <button class="chip">Hot (4)</button>
+              <button class="chip">PPV sent (2)</button>
             </div>
           </div>
           <div class="chat-list" id="chat-list"></div>
@@ -251,36 +251,36 @@
       <section class="view" id="view-payouts">
         <div class="kpi-grid kpi-grid-4">
           <div class="kpi-card">
-            <span class="kpi-label">Выплачено за месяц</span>
-            <div class="kpi-value">$4,820</div>
+            <span class="kpi-label">Paid this month</span>
+            <div class="kpi-value" id="kpi-paid-month">$4,820</div>
             <div class="kpi-trend up">▲ 6.4%</div>
           </div>
           <div class="kpi-card">
-            <span class="kpi-label">В обработке</span>
-            <div class="kpi-value">$640</div>
-            <div class="kpi-trend">1 выплата</div>
+            <span class="kpi-label">Processing</span>
+            <div class="kpi-value" id="kpi-processing">$640</div>
+            <div class="kpi-trend">1 payout</div>
           </div>
           <div class="kpi-card">
-            <span class="kpi-label">Ожидает</span>
-            <div class="kpi-value">$180</div>
-            <div class="kpi-trend">за сегодня</div>
+            <span class="kpi-label">Pending</span>
+            <div class="kpi-value" id="kpi-pending">$180</div>
+            <div class="kpi-trend">as of today</div>
           </div>
           <div class="kpi-card">
-            <span class="kpi-label">Моя ставка</span>
-            <div class="kpi-value">15%</div>
-            <div class="kpi-trend">от продаж</div>
+            <span class="kpi-label">My rate</span>
+            <div class="kpi-value" id="kpi-rate">15%</div>
+            <div class="kpi-trend">of sales</div>
           </div>
         </div>
 
         <div class="card">
           <div class="card-head">
-            <div><h3>История выплат</h3><p>Только мои</p></div>
-            <button class="btn-primary">Скачать историю</button>
+            <div><h3>Payout History</h3><p>Mine only</p></div>
+            <button class="btn-primary">Download history</button>
           </div>
           <div class="table-wrap">
             <table class="table">
               <thead>
-                <tr><th>ID</th><th>Период</th><th>Сумма</th><th>Метод</th><th>Статус</th><th>Дата</th></tr>
+                <tr><th>ID</th><th>Period</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr>
               </thead>
               <tbody id="payouts-body"></tbody>
             </table>
@@ -292,22 +292,42 @@
       <section class="view" id="view-settings">
         <div class="grid-2">
           <div class="card">
-            <div class="card-head"><div><h3>Профиль</h3><p>Основная информация</p></div></div>
+            <div class="card-head"><div><h3>Profile</h3><p>Basic information</p></div></div>
             <div class="form-grid">
-              <label>Имя<input type="text" value="Марина Соколова"></label>
-              <label>Telegram<input type="text" value="@marina_chat"></label>
-              <label>Кошелёк для выплат (USDT)<input type="text" value="TXn9k...4f2A"></label>
-              <label>Часовой пояс<input type="text" value="UTC+3 (Москва)"></label>
+              <label>Name<input type="text" id="input-name"></label>
+              <label>Telegram<input type="text" id="input-telegram"></label>
+              <label>Payout wallet (USDT)<input type="text" id="input-wallet"></label>
+              <label>Timezone<input type="text" id="input-timezone"></label>
             </div>
           </div>
           <div class="card">
-            <div class="card-head"><div><h3>Уведомления</h3><p>Что приходит в Telegram</p></div></div>
+            <div class="card-head"><div><h3>Notifications</h3><p>What gets sent to Telegram</p></div></div>
             <div class="toggle-list">
-              <div class="toggle-row"><span>Новая PPV-продажа выше $50</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
-              <div class="toggle-row"><span>Мой чат без ответа &gt; 15 минут</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
-              <div class="toggle-row"><span>Начало / конец смены</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
-              <div class="toggle-row"><span>Выплата подтверждена</span><label class="switch"><input type="checkbox"><i></i></label></div>
+              <div class="toggle-row"><span>New PPV sale above $50</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
+              <div class="toggle-row"><span>My chat unanswered &gt; 15 min</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
+              <div class="toggle-row"><span>Shift start / end</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
+              <div class="toggle-row"><span>Payout confirmed</span><label class="switch"><input type="checkbox"><i></i></label></div>
             </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Earnings &amp; Stats</h3><p>Edit the numbers shown across your dashboard</p></div></div>
+          <div class="form-grid form-grid-narrow">
+            <label>Earned today ($)<input type="number" id="input-earned-today"></label>
+            <label>Earned this week ($)<input type="number" id="input-earned-week"></label>
+            <label>Earned this month ($)<input type="number" id="input-earned-month"></label>
+            <label>Messages today<input type="number" id="input-messages-today"></label>
+            <label>PPV sold today<input type="number" id="input-ppv-today"></label>
+            <label>Average sale ($)<input type="number" id="input-avg-check"></label>
+            <label>Paid this month ($)<input type="number" id="input-paid-month"></label>
+            <label>Processing ($)<input type="number" id="input-processing"></label>
+            <label>Pending ($)<input type="number" id="input-pending"></label>
+            <label>My rate (%)<input type="number" id="input-rate"></label>
+          </div>
+          <div class="settings-actions">
+            <button class="btn-primary" id="save-settings-btn">Save changes</button>
+            <span class="save-status" id="save-status"></span>
           </div>
         </div>
       </section>

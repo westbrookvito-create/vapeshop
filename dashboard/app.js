@@ -1,16 +1,118 @@
-/* Кабинет чаттера — демо, все данные условные */
+/* Chatter dashboard — demo, all data is fake / editable */
 
 function initials(name) {
   return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 }
 
+/* ---------------- EDITABLE STATE (persisted to localStorage) ---------------- */
+const STORAGE_KEY = "chatterDashboardState";
+
+const DEFAULT_STATE = {
+  name: "Marina Sokolova",
+  telegram: "@marina_chat",
+  wallet: "TXn9k...4f2A",
+  timezone: "UTC+3 (Moscow)",
+  earnedToday: 186,
+  earnedWeek: 1240,
+  earnedMonth: 5380,
+  messagesToday: 342,
+  ppvToday: 7,
+  avgCheck: 38,
+  paidMonth: 4820,
+  processing: 640,
+  pending: 180,
+  rate: 15,
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_STATE };
+    return { ...DEFAULT_STATE, ...JSON.parse(raw) };
+  } catch {
+    return { ...DEFAULT_STATE };
+  }
+}
+
+function saveState(state) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+}
+
+let state = loadState();
+
+function money(n) {
+  return "$" + Number(n || 0).toLocaleString("en-US");
+}
+
+function renderState() {
+  document.getElementById("kpi-earned-today").textContent = money(state.earnedToday);
+  document.getElementById("kpi-earned-week").textContent = money(state.earnedWeek);
+  document.getElementById("kpi-earned-month").textContent = money(state.earnedMonth);
+  document.getElementById("kpi-messages-today").textContent = Number(state.messagesToday || 0).toLocaleString("en-US");
+  document.getElementById("kpi-ppv-today").textContent = state.ppvToday;
+  document.getElementById("kpi-avg-check").textContent = money(state.avgCheck);
+
+  document.getElementById("kpi-paid-month").textContent = money(state.paidMonth);
+  document.getElementById("kpi-processing").textContent = money(state.processing);
+  document.getElementById("kpi-pending").textContent = money(state.pending);
+  document.getElementById("kpi-rate").textContent = state.rate + "%";
+
+  document.getElementById("user-name").textContent = state.name;
+  document.getElementById("user-avatar").textContent = initials(state.name || "??");
+}
+
+function fillSettingsForm() {
+  document.getElementById("input-name").value = state.name;
+  document.getElementById("input-telegram").value = state.telegram;
+  document.getElementById("input-wallet").value = state.wallet;
+  document.getElementById("input-timezone").value = state.timezone;
+  document.getElementById("input-earned-today").value = state.earnedToday;
+  document.getElementById("input-earned-week").value = state.earnedWeek;
+  document.getElementById("input-earned-month").value = state.earnedMonth;
+  document.getElementById("input-messages-today").value = state.messagesToday;
+  document.getElementById("input-ppv-today").value = state.ppvToday;
+  document.getElementById("input-avg-check").value = state.avgCheck;
+  document.getElementById("input-paid-month").value = state.paidMonth;
+  document.getElementById("input-processing").value = state.processing;
+  document.getElementById("input-pending").value = state.pending;
+  document.getElementById("input-rate").value = state.rate;
+}
+
+document.getElementById("save-settings-btn").addEventListener("click", () => {
+  state = {
+    name: document.getElementById("input-name").value.trim() || DEFAULT_STATE.name,
+    telegram: document.getElementById("input-telegram").value.trim(),
+    wallet: document.getElementById("input-wallet").value.trim(),
+    timezone: document.getElementById("input-timezone").value.trim(),
+    earnedToday: Number(document.getElementById("input-earned-today").value) || 0,
+    earnedWeek: Number(document.getElementById("input-earned-week").value) || 0,
+    earnedMonth: Number(document.getElementById("input-earned-month").value) || 0,
+    messagesToday: Number(document.getElementById("input-messages-today").value) || 0,
+    ppvToday: Number(document.getElementById("input-ppv-today").value) || 0,
+    avgCheck: Number(document.getElementById("input-avg-check").value) || 0,
+    paidMonth: Number(document.getElementById("input-paid-month").value) || 0,
+    processing: Number(document.getElementById("input-processing").value) || 0,
+    pending: Number(document.getElementById("input-pending").value) || 0,
+    rate: Number(document.getElementById("input-rate").value) || 0,
+  };
+  saveState(state);
+  renderState();
+  const status = document.getElementById("save-status");
+  status.textContent = "Saved ✓";
+  status.classList.add("show");
+  setTimeout(() => status.classList.remove("show"), 1800);
+});
+
+renderState();
+fillSettingsForm();
+
 /* ---------------- NAVIGATION ---------------- */
 const titles = {
-  overview: ["Обзор", "Твоя статистика за выбранный период"],
-  chats: ["Мои чаты", "Диалоги, назначенные на тебя в эту смену"],
-  stats: ["Статистика", "Разбивка заработка и конверсии"],
-  payouts: ["Выплаты", "Твои начисления и история выплат"],
-  settings: ["Настройки", "Профиль и уведомления"],
+  overview: ["Overview", "Your stats for the selected period"],
+  chats: ["My Chats", "Chats assigned to you this shift"],
+  stats: ["Statistics", "Breakdown of earnings and conversion"],
+  payouts: ["Payouts", "Your earnings and payout history"],
+  settings: ["Settings", "Profile and notifications"],
 };
 
 document.querySelectorAll(".nav-item[data-view]").forEach(btn => {
@@ -52,7 +154,7 @@ const RED = "#ef4444";
 const revLabels = Array.from({ length: 14 }, (_, i) => {
   const d = new Date();
   d.setDate(d.getDate() - (13 - i));
-  return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+  return d.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit" });
 });
 const revData = [142, 168, 121, 195, 176, 210, 158, 224, 201, 245, 189, 260, 232, 186];
 
@@ -96,14 +198,14 @@ new Chart(document.getElementById("chart-revenue").getContext("2d"), {
   }
 });
 
-/* Донаты vs PPV bar chart — flat green / red */
-const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+/* Tips vs PPV bar chart — flat green / red */
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 new Chart(document.getElementById("chart-messages").getContext("2d"), {
   type: "bar",
   data: {
     labels: days,
     datasets: [
-      { label: "Донаты", data: [42, 58, 30, 66, 74, 96, 51], backgroundColor: GREEN, borderRadius: 2, barPercentage: 0.55 },
+      { label: "Tips", data: [42, 58, 30, 66, 74, 96, 51], backgroundColor: GREEN, borderRadius: 2, barPercentage: 0.55 },
       { label: "PPV", data: [80, 64, 96, 58, 112, 140, 90], backgroundColor: RED, borderRadius: 2, barPercentage: 0.55 },
     ]
   },
@@ -122,11 +224,11 @@ new Chart(document.getElementById("chart-messages").getContext("2d"), {
   }
 });
 
-/* Донаты vs PPV donut — flat colors */
+/* Tips vs PPV donut — flat colors */
 new Chart(document.getElementById("chart-split").getContext("2d"), {
   type: "doughnut",
   data: {
-    labels: ["Донаты", "PPV"],
+    labels: ["Tips", "PPV"],
     datasets: [{ data: [41, 59], backgroundColor: [GREEN, RED], borderColor: "#12151d", borderWidth: 3 }]
   },
   options: {
@@ -163,14 +265,14 @@ const feedModels = ["Kira Storm", "Aria Vale", "Nova Sky"];
 function randomFeed(n) {
   const rows = [];
   for (let i = 0; i < n; i++) {
-    const isDonate = Math.random() > 0.45;
+    const isTip = Math.random() > 0.45;
     const user = feedUsers[Math.floor(Math.random() * feedUsers.length)];
     const model = feedModels[Math.floor(Math.random() * feedModels.length)];
-    const amount = isDonate ? Math.floor(Math.random() * 60) + 10 : Math.floor(Math.random() * 90) + 20;
+    const amount = isTip ? Math.floor(Math.random() * 60) + 10 : Math.floor(Math.random() * 90) + 20;
     rows.push({
-      text: `${isDonate ? "Донат" : "PPV куплен"} · @${user} · ${model}`,
-      amount, isDonate,
-      time: `${(i + 1) * 7} мин назад`,
+      text: `${isTip ? "Tip" : "PPV purchased"} · @${user} · ${model}`,
+      amount, isTip,
+      time: `${(i + 1) * 7} min ago`,
     });
   }
   return rows;
@@ -182,20 +284,20 @@ document.getElementById("activity-feed").innerHTML = randomFeed(8).map(f => `
       <div class="activity-text">${f.text}</div>
       <div class="activity-time">${f.time}</div>
     </div>
-    <div class="activity-amount ${f.isDonate ? "green" : "red"}">+$${f.amount}</div>
+    <div class="activity-amount ${f.isTip ? "green" : "red"}">+$${f.amount}</div>
   </div>
 `).join("");
 
 /* ---------------- DATA: CHATS ---------------- */
 const chatMessages = [
-  "Привет! Как твои выходные? 😘",
-  "Отправила тебе кое-что новенькое...",
-  "Спасибо за подарок, ты лучший",
-  "Когда выложишь новый контент?",
-  "Ахах, обожаю такие сообщения",
-  "Я скучаю, напиши мне вечером",
-  "Купил PPV, жду ответа!",
-  "Это было потрясающе, хочу ещё",
+  "Hey! How was your weekend? 😘",
+  "Sent you something new...",
+  "Thanks for the gift, you're the best",
+  "When are you posting new content?",
+  "Haha I love messages like this",
+  "I miss you, text me tonight",
+  "Bought the PPV, waiting on you!",
+  "That was amazing, want more",
 ];
 const chatNames = ["mike_92", "daniel.k", "shadow_x", "peterR", "alex_vip", "johnny88", "kevin_b", "ryan_t", "chris_w", "brandon99", "tommy_l"];
 
@@ -210,7 +312,7 @@ function randomChats(n) {
       user: chatNames[Math.floor(Math.random() * chatNames.length)] + Math.floor(Math.random() * 90),
       model, online, unread,
       msg: chatMessages[Math.floor(Math.random() * chatMessages.length)],
-      time: `${mins} мин назад`,
+      time: `${mins} min ago`,
     });
   }
   return rows;
@@ -236,11 +338,11 @@ document.getElementById("chat-list").innerHTML = randomChats(11).map(r => `
 
 /* ---------------- DATA: TOP SPENDERS (my clients) ---------------- */
 const spenders = [
-  { user: "mike_92", model: "Kira Storm", platform: "of", spent: 640, purchases: 9, last: "2 ч назад" },
-  { user: "daniel.k", model: "Aria Vale", platform: "of", spent: 480, purchases: 7, last: "5 ч назад" },
-  { user: "shadow_x", model: "Nova Sky", platform: "fansly", spent: 410, purchases: 6, last: "1 д назад" },
-  { user: "alex_vip", model: "Kira Storm", platform: "of", spent: 310, purchases: 5, last: "3 ч назад" },
-  { user: "johnny88", model: "Aria Vale", platform: "of", spent: 260, purchases: 4, last: "6 ч назад" },
+  { user: "mike_92", model: "Kira Storm", platform: "of", spent: 640, purchases: 9, last: "2h ago" },
+  { user: "daniel.k", model: "Aria Vale", platform: "of", spent: 480, purchases: 7, last: "5h ago" },
+  { user: "shadow_x", model: "Nova Sky", platform: "fansly", spent: 410, purchases: 6, last: "1d ago" },
+  { user: "alex_vip", model: "Kira Storm", platform: "of", spent: 310, purchases: 5, last: "3h ago" },
+  { user: "johnny88", model: "Aria Vale", platform: "of", spent: 260, purchases: 4, last: "6h ago" },
 ];
 
 document.getElementById("spenders-body").innerHTML = spenders.map(s => `
@@ -258,17 +360,16 @@ document.getElementById("spenders-body").innerHTML = spenders.map(s => `
 `).join("");
 
 /* ---------------- DATA: MY PAYOUTS ---------------- */
-const methods = ["Криптовалюта (USDT)", "Банковский перевод", "PayPal"];
+const methods = ["Crypto (USDT)", "Bank transfer", "PayPal"];
 const statuses = [
-  { key: "paid", label: "Выплачено" },
-  { key: "processing", label: "В обработке" },
-  { key: "pending", label: "Ожидает" },
+  { key: "paid", label: "Paid" },
+  { key: "processing", label: "Processing" },
+  { key: "pending", label: "Pending" },
 ];
 
 function randomPayouts(n) {
   const rows = [];
   for (let i = 0; i < n; i++) {
-    const st = statuses[Math.floor(Math.random() * statuses.length)];
     const d = new Date();
     d.setDate(d.getDate() - i * 7 - Math.floor(Math.random() * 3));
     rows.push({
@@ -276,7 +377,7 @@ function randomPayouts(n) {
       amount: Math.floor(Math.random() * 900) + 300,
       method: methods[Math.floor(Math.random() * methods.length)],
       status: i === 0 ? statuses[2] : (i === 1 ? statuses[1] : statuses[0]),
-      date: d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" }),
+      date: d.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit", year: "numeric" }),
     });
   }
   return rows;
@@ -285,7 +386,7 @@ function randomPayouts(n) {
 document.getElementById("payouts-body").innerHTML = randomPayouts(7).map((p, i) => `
   <tr>
     <td>${p.id}</td>
-    <td>Неделя ${7 - i}</td>
+    <td>Week ${7 - i}</td>
     <td><b>$${p.amount}</b></td>
     <td>${p.method}</td>
     <td><span class="badge ${p.status.key}">${p.status.label}</span></td>
