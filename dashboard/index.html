@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NovaChat CRM — Дашборд чаттинг-агентства</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%233b82f6%22/><text x=%2250%22 y=%2266%22 font-size=%2258%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>N</text></svg>">
+<title>Кабинет чаттера</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,44 +12,24 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">N</div>
-      <div class="brand-name">NovaChat<span>CRM</span></div>
-    </div>
-
     <nav class="nav">
-      <div class="nav-group-label">Обзор</div>
       <button class="nav-item active" data-view="overview">
         <svg viewBox="0 0 24 24"><path d="M3 13h4v8H3zM10 3h4v18h-4zM17 8h4v13h-4z"/></svg>
-        Дашборд
+        Обзор
+      </button>
+      <button class="nav-item" data-view="chats">
+        <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        Мои чаты
+        <span class="nav-badge">11</span>
       </button>
       <button class="nav-item" data-view="stats">
         <svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l3-4 3 3 5-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Статистика
       </button>
-
-      <div class="nav-group-label">Работа</div>
-      <button class="nav-item" data-view="chats">
-        <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-        Чаты
-        <span class="nav-badge">12</span>
-      </button>
-      <button class="nav-item" data-view="models">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        Модели
-      </button>
-      <button class="nav-item" data-view="team">
-        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="9" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 20c.6-3.6 3.3-6 6.5-6s5.9 2.4 6.5 6M15 14.3c2.6.2 4.7 2.3 5.2 5.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        Чаттеры
-      </button>
-
-      <div class="nav-group-label">Финансы</div>
       <button class="nav-item" data-view="payouts">
         <svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 10.5h19" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="14.5" r="1.2" fill="currentColor"/></svg>
         Выплаты
       </button>
-
-      <div class="nav-group-label">Система</div>
       <button class="nav-item" data-view="settings">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13a7.9 7.9 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.9 7.9 0 0 0-1.7-1L15 3h-4l-.3 2.9a7.9 7.9 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.9 7.9 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.9 7.9 0 0 0 1.7 1L11 21h4l.3-2.9a7.9 7.9 0 0 0 1.7-1l2.5 1 2-3.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
         Настройки
@@ -58,13 +37,10 @@
     </nav>
 
     <div class="sidebar-footer">
-      <div class="plan-card">
-        <div class="plan-card-top">
-          <span class="plan-dot"></span>
-          <span>Тариф Agency Pro</span>
-        </div>
-        <div class="plan-bar"><span style="width:74%"></span></div>
-        <div class="plan-sub">74% лимита моделей использовано</div>
+      <div class="shift-card">
+        <div class="shift-row"><span>Смена</span><b>17:00 – 01:00</b></div>
+        <div class="shift-row"><span>Отработано</span><b>4ч 12м</b></div>
+        <div class="shift-bar"><span style="width:52%"></span></div>
       </div>
     </div>
   </aside>
@@ -74,25 +50,24 @@
 
     <header class="topbar">
       <div class="topbar-left">
-        <h1 id="view-title">Дашборд</h1>
-        <p id="view-subtitle">Сводка по всем моделям и чаттерам за выбранный период</p>
+        <h1 id="view-title">Обзор</h1>
+        <p id="view-subtitle">Твоя статистика за выбранный период</p>
       </div>
       <div class="topbar-right">
         <div class="range-switch">
           <button class="range-btn">24ч</button>
           <button class="range-btn active">7 дней</button>
           <button class="range-btn">30 дней</button>
-          <button class="range-btn">Год</button>
         </div>
         <button class="icon-btn" title="Уведомления">
           <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 0 1-3.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           <span class="dot-alert"></span>
         </button>
         <div class="user-chip">
-          <div class="avatar">AV</div>
+          <div class="avatar">МС</div>
           <div class="user-chip-text">
-            <strong>Алекс Волков</strong>
-            <span>Владелец агентства</span>
+            <strong>Марина Соколова</strong>
+            <span>Чаттер · ночная смена</span>
           </div>
         </div>
       </div>
@@ -105,69 +80,39 @@
 
         <div class="kpi-grid">
           <div class="kpi-card">
-            <div class="kpi-top">
-              <span class="kpi-label">Доход сегодня</span>
-              <span class="kpi-icon blue">
-                <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5.5c0-1.9-2.2-3.5-5-3.5S7 3.6 7 5.5 9.2 9 12 9s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              </span>
-            </div>
-            <div class="kpi-value">$2,340</div>
-            <div class="kpi-trend up">▲ 12.4% <span>vs вчера</span></div>
+            <span class="kpi-label">Заработано сегодня</span>
+            <div class="kpi-value">$186</div>
+            <div class="kpi-trend up">▲ 9% <span>vs вчера</span></div>
           </div>
 
           <div class="kpi-card">
-            <div class="kpi-top">
-              <span class="kpi-label">Доход за 30 дней</span>
-              <span class="kpi-icon green">
-                <svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </div>
-            <div class="kpi-value">$58,920</div>
-            <div class="kpi-trend up">▲ 8.1% <span>vs пред. период</span></div>
+            <span class="kpi-label">Заработано за 7 дней</span>
+            <div class="kpi-value">$1,240</div>
+            <div class="kpi-trend up">▲ 4.6% <span>vs пред. неделя</span></div>
           </div>
 
           <div class="kpi-card">
-            <div class="kpi-top">
-              <span class="kpi-label">Активные диалоги</span>
-              <span class="kpi-icon purple">
-                <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5H12a8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.2a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3H13a8.5 8.5 0 0 1 8 8.5z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
-              </span>
-            </div>
-            <div class="kpi-value">47</div>
-            <div class="kpi-trend down">▼ 3 <span>к утру</span></div>
+            <span class="kpi-label">Заработано за 30 дней</span>
+            <div class="kpi-value">$5,380</div>
+            <div class="kpi-trend down">▼ 2.1% <span>vs пред. месяц</span></div>
           </div>
 
           <div class="kpi-card">
-            <div class="kpi-top">
-              <span class="kpi-label">Конверсия PPV</span>
-              <span class="kpi-icon orange">
-                <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 8-8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 4v5h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </div>
-            <div class="kpi-value">23.6%</div>
-            <div class="kpi-trend up">▲ 1.9% <span>vs пред. период</span></div>
+            <span class="kpi-label">Сообщений сегодня</span>
+            <div class="kpi-value">342</div>
+            <div class="kpi-trend">58 / час</div>
           </div>
 
           <div class="kpi-card">
-            <div class="kpi-top">
-              <span class="kpi-label">Новые подписчики</span>
-              <span class="kpi-icon blue">
-                <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 20c.6-3.6 3.3-6 6.5-6s5.9 2.4 6.5 6M17 5v6M14 8h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              </span>
-            </div>
-            <div class="kpi-value">312</div>
-            <div class="kpi-trend up">▲ 44 <span>за неделю</span></div>
+            <span class="kpi-label">PPV продано сегодня</span>
+            <div class="kpi-value">7</div>
+            <div class="kpi-trend up">▲ 2 <span>vs вчера</span></div>
           </div>
 
           <div class="kpi-card">
-            <div class="kpi-top">
-              <span class="kpi-label">Средний чек</span>
-              <span class="kpi-icon green">
-                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.8"/></svg>
-              </span>
-            </div>
-            <div class="kpi-value">$46</div>
-            <div class="kpi-trend up">▲ $3.20 <span>vs пред. период</span></div>
+            <span class="kpi-label">Средний чек</span>
+            <div class="kpi-value">$38</div>
+            <div class="kpi-trend down">▼ $1.40</div>
           </div>
         </div>
 
@@ -175,28 +120,25 @@
           <div class="card chart-card">
             <div class="card-head">
               <div>
-                <h3>Динамика дохода</h3>
-                <p>Последние 14 дней, все модели</p>
-              </div>
-              <div class="legend">
-                <span><i class="dot blue"></i>Доход, $</span>
+                <h3>Мой заработок</h3>
+                <p>Последние 14 дней</p>
               </div>
             </div>
-            <canvas id="chart-revenue" height="230"></canvas>
+            <canvas id="chart-revenue"></canvas>
           </div>
 
           <div class="card chart-card">
             <div class="card-head">
               <div>
-                <h3>Активность в чатах</h3>
-                <p>Сообщения vs проданные PPV</p>
+                <h3>Доход по дням</h3>
+                <p>Донаты и PPV</p>
               </div>
               <div class="legend">
-                <span><i class="dot lightblue"></i>Сообщения</span>
-                <span><i class="dot pink"></i>PPV продано</span>
+                <span><i class="dot green"></i>Донаты</span>
+                <span><i class="dot red"></i>PPV</span>
               </div>
             </div>
-            <canvas id="chart-messages" height="230"></canvas>
+            <canvas id="chart-messages"></canvas>
           </div>
         </div>
 
@@ -204,21 +146,24 @@
           <div class="card">
             <div class="card-head">
               <div>
-                <h3>Топ чаттеры недели</h3>
-                <p>По принесённому доходу</p>
+                <h3>Мои модели сегодня</h3>
+                <p>Кому пишу в эту смену</p>
               </div>
-              <a class="link-btn" data-goto="team">Все чаттеры →</a>
             </div>
-            <div class="leaderboard" id="leaderboard"></div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>Модель</th><th>Платформа</th><th>Сообщений</th><th>Заработано</th></tr></thead>
+                <tbody id="my-models-body"></tbody>
+              </table>
+            </div>
           </div>
 
           <div class="card">
             <div class="card-head">
               <div>
-                <h3>Последняя активность</h3>
-                <p>События в реальном времени</p>
+                <h3>Последние поступления</h3>
+                <p>Обновлено 2 мин назад</p>
               </div>
-              <span class="live-badge"><i></i>live</span>
             </div>
             <div class="activity-feed" id="activity-feed"></div>
           </div>
@@ -230,41 +175,41 @@
         <div class="grid-2">
           <div class="card chart-card">
             <div class="card-head">
-              <div><h3>Доход по платформам</h3><p>Распределение за 30 дней</p></div>
+              <div><h3>Донаты vs PPV</h3><p>Распределение за 30 дней</p></div>
             </div>
             <div class="donut-wrap">
-              <div class="donut-canvas-box"><canvas id="chart-platform"></canvas></div>
+              <div class="donut-canvas-box"><canvas id="chart-split"></canvas></div>
               <div class="donut-legend">
-                <div><i class="dot blue"></i>OnlyFans <strong>68%</strong><span>$40,065</span></div>
-                <div><i class="dot pink"></i>Fansly <strong>32%</strong><span>$18,855</span></div>
+                <div><i class="dot green"></i>Донаты <strong>41%</strong><span>$2,206</span></div>
+                <div><i class="dot red"></i>PPV <strong>59%</strong><span>$3,174</span></div>
               </div>
             </div>
           </div>
 
           <div class="card">
             <div class="card-head">
-              <div><h3>Воронка продаж PPV</h3><p>От сообщения до оплаты</p></div>
+              <div><h3>Моя воронка</h3><p>От сообщения до оплаты</p></div>
             </div>
             <div class="funnel">
               <div class="funnel-row">
-                <span>Сообщение отправлено</span>
+                <span>Сообщений отправлено</span>
                 <div class="funnel-bar"><span style="width:100%"></span></div>
-                <b>18,420</b>
+                <b>2,140</b>
               </div>
               <div class="funnel-row">
                 <span>PPV предложен</span>
-                <div class="funnel-bar"><span style="width:62%"></span></div>
-                <b>11,420 · 62%</b>
+                <div class="funnel-bar"><span style="width:30%"></span></div>
+                <b>642 · 30%</b>
               </div>
               <div class="funnel-row">
                 <span>PPV открыт</span>
-                <div class="funnel-bar"><span style="width:41%"></span></div>
-                <b>7,552 · 41%</b>
+                <div class="funnel-bar"><span style="width:19%"></span></div>
+                <b>407 · 19%</b>
               </div>
               <div class="funnel-row">
                 <span>PPV куплен</span>
-                <div class="funnel-bar accent"><span style="width:24%"></span></div>
-                <b>4,421 · 24%</b>
+                <div class="funnel-bar accent"><span style="width:10%"></span></div>
+                <b>214 · 10%</b>
               </div>
             </div>
           </div>
@@ -272,7 +217,7 @@
 
         <div class="card">
           <div class="card-head">
-            <div><h3>Топ спонсоры (spenders)</h3><p>Самые крупные покупатели за 30 дней</p></div>
+            <div><h3>Мои топ клиенты</h3><p>Самые крупные покупатели за 30 дней</p></div>
             <input class="table-search" placeholder="Поиск по нику...">
           </div>
           <div class="table-wrap">
@@ -290,38 +235,15 @@
       <section class="view" id="view-chats">
         <div class="card">
           <div class="card-head">
-            <div><h3>Активные диалоги</h3><p>Распределены по чаттерам и моделям</p></div>
+            <div><h3>Мои диалоги</h3><p>Назначенные на меня в эту смену</p></div>
             <div class="chip-filters">
-              <button class="chip active">Все (47)</button>
-              <button class="chip">Ожидают ответа (9)</button>
-              <button class="chip">Горячие лиды (14)</button>
-              <button class="chip">PPV отправлен (6)</button>
+              <button class="chip active">Все (11)</button>
+              <button class="chip">Ждут ответа (3)</button>
+              <button class="chip">Горячие (4)</button>
+              <button class="chip">PPV отправлен (2)</button>
             </div>
           </div>
           <div class="chat-list" id="chat-list"></div>
-        </div>
-      </section>
-
-      <!-- ===== MODELS ===== -->
-      <section class="view" id="view-models">
-        <div class="model-grid" id="model-grid"></div>
-      </section>
-
-      <!-- ===== TEAM ===== -->
-      <section class="view" id="view-team">
-        <div class="card">
-          <div class="card-head">
-            <div><h3>Чаттеры</h3><p>Смены, KPI и доход команды</p></div>
-            <button class="btn-primary">+ Добавить чаттера</button>
-          </div>
-          <div class="table-wrap">
-            <table class="table">
-              <thead>
-                <tr><th>Чаттер</th><th>Смена</th><th>Моделей</th><th>Сообщений/ч</th><th>Конверсия</th><th>Доход принесён</th><th>Статус</th></tr>
-              </thead>
-              <tbody id="team-body"></tbody>
-            </table>
-          </div>
         </div>
       </section>
 
@@ -329,36 +251,36 @@
       <section class="view" id="view-payouts">
         <div class="kpi-grid kpi-grid-4">
           <div class="kpi-card">
-            <div class="kpi-top"><span class="kpi-label">Выплачено за месяц</span></div>
-            <div class="kpi-value">$41,760</div>
+            <span class="kpi-label">Выплачено за месяц</span>
+            <div class="kpi-value">$4,820</div>
             <div class="kpi-trend up">▲ 6.4%</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-top"><span class="kpi-label">В обработке</span></div>
-            <div class="kpi-value">$9,120</div>
-            <div class="kpi-trend">5 выплат</div>
+            <span class="kpi-label">В обработке</span>
+            <div class="kpi-value">$640</div>
+            <div class="kpi-trend">1 выплата</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-top"><span class="kpi-label">Ожидает подтверждения</span></div>
-            <div class="kpi-value">$3,480</div>
-            <div class="kpi-trend">2 выплаты</div>
+            <span class="kpi-label">Ожидает</span>
+            <div class="kpi-value">$180</div>
+            <div class="kpi-trend">за сегодня</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-top"><span class="kpi-label">Комиссия платформ</span></div>
-            <div class="kpi-value">$8,940</div>
-            <div class="kpi-trend down">15.2% от дохода</div>
+            <span class="kpi-label">Моя ставка</span>
+            <div class="kpi-value">15%</div>
+            <div class="kpi-trend">от продаж</div>
           </div>
         </div>
 
         <div class="card">
           <div class="card-head">
-            <div><h3>История выплат</h3><p>Модели и чаттеры</p></div>
-            <button class="btn-primary">Экспорт CSV</button>
+            <div><h3>История выплат</h3><p>Только мои</p></div>
+            <button class="btn-primary">Скачать историю</button>
           </div>
           <div class="table-wrap">
             <table class="table">
               <thead>
-                <tr><th>ID</th><th>Получатель</th><th>Роль</th><th>Период</th><th>Сумма</th><th>Метод</th><th>Статус</th><th>Дата</th></tr>
+                <tr><th>ID</th><th>Период</th><th>Сумма</th><th>Метод</th><th>Статус</th><th>Дата</th></tr>
               </thead>
               <tbody id="payouts-body"></tbody>
             </table>
@@ -370,24 +292,21 @@
       <section class="view" id="view-settings">
         <div class="grid-2">
           <div class="card">
-            <div class="card-head"><div><h3>Профиль агентства</h3><p>Основная информация</p></div></div>
+            <div class="card-head"><div><h3>Профиль</h3><p>Основная информация</p></div></div>
             <div class="form-grid">
-              <label>Название агентства<input type="text" value="NovaChat Agency"></label>
+              <label>Имя<input type="text" value="Марина Соколова"></label>
+              <label>Telegram<input type="text" value="@marina_chat"></label>
+              <label>Кошелёк для выплат (USDT)<input type="text" value="TXn9k...4f2A"></label>
               <label>Часовой пояс<input type="text" value="UTC+3 (Москва)"></label>
-              <label>Email для уведомлений<input type="text" value="alex@novachat.agency"></label>
-              <label>Валюта отчётов
-                <select><option>USD ($)</option><option>EUR (€)</option></select>
-              </label>
             </div>
           </div>
           <div class="card">
-            <div class="card-head"><div><h3>Уведомления</h3><p>Что приходит в Telegram/почту</p></div></div>
+            <div class="card-head"><div><h3>Уведомления</h3><p>Что приходит в Telegram</p></div></div>
             <div class="toggle-list">
               <div class="toggle-row"><span>Новая PPV-продажа выше $50</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
-              <div class="toggle-row"><span>Чат без ответа &gt; 15 минут</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
-              <div class="toggle-row"><span>Ежедневный отчёт в 09:00</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
+              <div class="toggle-row"><span>Мой чат без ответа &gt; 15 минут</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
+              <div class="toggle-row"><span>Начало / конец смены</span><label class="switch"><input type="checkbox" checked><i></i></label></div>
               <div class="toggle-row"><span>Выплата подтверждена</span><label class="switch"><input type="checkbox"><i></i></label></div>
-              <div class="toggle-row"><span>Новый подписчик у топ-модели</span><label class="switch"><input type="checkbox"><i></i></label></div>
             </div>
           </div>
         </div>
