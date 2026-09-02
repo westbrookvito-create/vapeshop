@@ -114,27 +114,25 @@ html, body {
 
 .topbar-right { display: flex; align-items: center; gap: 12px; }
 
-.range-switch {
+.shift-pill {
   display: flex;
+  align-items: center;
+  gap: 8px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 2px;
-  gap: 1px;
-}
-.range-btn {
-  border: none;
-  background: transparent;
-  color: var(--text-dim);
-  font-family: inherit;
+  border-radius: 20px;
+  padding: 6px 14px 6px 10px;
   font-size: 12px;
   font-weight: 500;
-  padding: 5px 11px;
-  border-radius: 5px;
-  cursor: pointer;
+  color: var(--text-dim);
+  white-space: nowrap;
 }
-.range-btn.active { background: var(--surface-hover); color: #fff; }
-.range-btn:hover:not(.active) { color: var(--text); }
+.shift-pill i {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0;
+}
+.shift-pill.ended i { background: var(--text-dimmer); }
+.shift-pill.ended { color: var(--text-dimmer); }
 
 .icon-btn {
   position: relative;

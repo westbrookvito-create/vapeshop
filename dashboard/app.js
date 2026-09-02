@@ -1,4 +1,4 @@
-/* Chatter dashboard — demo, all data is fake / editable */
+/* Chatter dashboard — demo, all data is fake / editable. Everything is scoped to the current shift. */
 
 function initials(name) {
   return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
@@ -12,19 +12,26 @@ const DEFAULT_STATE = {
   telegram: "@marina_chat",
   wallet: "TXn9k...4f2A",
   timezone: "UTC+3 (Moscow)",
-  earnedToday: 186,
-  earnedWeek: 1240,
-  earnedMonth: 5380,
-  messagesToday: 342,
-  ppvToday: 7,
-  avgCheck: 38,
+
+  // shiftStart is a real timestamp — everything shift-related is computed live from it
+  shiftStart: Date.now() - 2 * 3600 * 1000,
+  shiftLengthHours: 6,
+
+  earnedShift: 186,
+  messagesShift: 94,
+  ppvShift: 5,
+  avgCheck: 34,
+
   paidMonth: 4820,
   processing: 640,
   pending: 180,
   rate: 15,
+
   rangeMin: 120,
   rangeMax: 260,
   tipsRatio: 0.41,
+  offerRatio: 0.30,
+  openRatio: 0.63,
 };
 
 function loadState() {
@@ -47,13 +54,57 @@ function money(n) {
   return "$" + Number(n || 0).toLocaleString("en-US");
 }
 
+/* ---------------- SHIFT CLOCK (real time) ---------------- */
+function getShiftInfo() {
+  const lengthMs = Math.max(1, state.shiftLengthHours) * 3600000;
+  const elapsedMsRaw = Date.now() - state.shiftStart;
+  const elapsedMs = Math.min(Math.max(elapsedMsRaw, 0), lengthMs);
+  const remainingMs = Math.max(lengthMs - elapsedMsRaw, 0);
+  return {
+    lengthMs,
+    elapsedMs,
+    remainingMs,
+    elapsedHours: elapsedMs / 3600000,
+    progressPct: Math.min(100, (elapsedMs / lengthMs) * 100),
+    ended: elapsedMsRaw >= lengthMs,
+  };
+}
+
+function fmtDuration(ms) {
+  const totalMin = Math.max(0, Math.round(ms / 60000));
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return `${h}h ${String(m).padStart(2, "0")}m`;
+}
+
+function fmtClock(ts) {
+  return new Date(ts).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+function fmtClockHour(ts) {
+  return new Date(ts).toLocaleTimeString("en-US", { hour: "numeric" });
+}
+
+/* ---------------- RENDER ---------------- */
 function renderState() {
-  document.getElementById("kpi-earned-today").textContent = money(state.earnedToday);
-  document.getElementById("kpi-earned-week").textContent = money(state.earnedWeek);
-  document.getElementById("kpi-earned-month").textContent = money(state.earnedMonth);
-  document.getElementById("kpi-messages-today").textContent = Number(state.messagesToday || 0).toLocaleString("en-US");
-  document.getElementById("kpi-ppv-today").textContent = state.ppvToday;
+  const shift = getShiftInfo();
+  const paceHours = Math.max(shift.elapsedHours, 0.15); // avoid a huge number right at shift start
+
+  document.getElementById("kpi-earned-shift").textContent = money(state.earnedShift);
+  document.getElementById("kpi-earned-pace").textContent = money(Math.round(state.earnedShift / paceHours)) + " / h pace";
+
+  document.getElementById("kpi-messages-shift").textContent = Number(state.messagesShift || 0).toLocaleString("en-US");
+  document.getElementById("kpi-messages-pace").textContent = Math.round(state.messagesShift / paceHours) + " / h";
+
+  document.getElementById("kpi-ppv-shift").textContent = state.ppvShift;
   document.getElementById("kpi-avg-check").textContent = money(state.avgCheck);
+
+  document.getElementById("kpi-time-elapsed").textContent = fmtDuration(shift.elapsedMs);
+  document.getElementById("kpi-time-elapsed-sub").textContent = `of ${state.shiftLengthHours}h shift`;
+  document.getElementById("kpi-time-remaining").textContent = shift.ended ? "0h 00m" : fmtDuration(shift.remainingMs);
+  document.getElementById("kpi-time-remaining-sub").textContent = shift.ended
+    ? "shift ended"
+    : `ends at ${fmtClock(state.shiftStart + shift.lengthMs)}`;
 
   document.getElementById("kpi-paid-month").textContent = money(state.paidMonth);
   document.getElementById("kpi-processing").textContent = money(state.processing);
@@ -63,12 +114,38 @@ function renderState() {
   document.getElementById("user-name").textContent = state.name;
   document.getElementById("user-avatar").textContent = initials(state.name || "??");
 
-  const tipsAmt = Math.round(state.earnedMonth * state.tipsRatio);
-  const ppvAmt = state.earnedMonth - tipsAmt;
+  // sidebar shift widget
+  document.getElementById("shift-range").textContent = `${fmtClock(state.shiftStart)} – ${fmtClock(state.shiftStart + shift.lengthMs)}`;
+  document.getElementById("shift-worked").textContent = fmtDuration(shift.elapsedMs);
+  document.getElementById("shift-bar-fill").style.width = shift.progressPct + "%";
+
+  // topbar shift pill
+  const pill = document.getElementById("shift-pill");
+  const pillText = document.getElementById("shift-pill-text");
+  pill.classList.toggle("ended", shift.ended);
+  pillText.textContent = shift.ended ? "Shift ended" : `On shift · ${fmtDuration(shift.remainingMs)} left`;
+
+  // tips vs PPV split (this shift)
+  const tipsAmt = Math.round(state.earnedShift * state.tipsRatio);
+  const ppvAmt = state.earnedShift - tipsAmt;
   document.getElementById("split-tips-pct").textContent = Math.round(state.tipsRatio * 100) + "%";
   document.getElementById("split-ppv-pct").textContent = Math.round((1 - state.tipsRatio) * 100) + "%";
   document.getElementById("split-tips-amt").textContent = money(tipsAmt);
   document.getElementById("split-ppv-amt").textContent = money(ppvAmt);
+
+  // funnel (this shift) — bottom of the funnel matches the PPV-sold KPI
+  const messages = Math.max(1, state.messagesShift);
+  const offered = Math.min(messages, Math.max(1, Math.round(messages * state.offerRatio)));
+  const purchased = Math.min(offered, state.ppvShift);
+  const opened = Math.max(purchased, Math.round(offered * state.openRatio));
+  const pct = n => Math.round((n / messages) * 100);
+  document.getElementById("funnel-messages").textContent = messages.toLocaleString("en-US");
+  document.getElementById("funnel-offered").textContent = `${offered.toLocaleString("en-US")} · ${pct(offered)}%`;
+  document.getElementById("funnel-opened").textContent = `${opened.toLocaleString("en-US")} · ${pct(opened)}%`;
+  document.getElementById("funnel-purchased").textContent = `${purchased.toLocaleString("en-US")} · ${pct(purchased)}%`;
+  document.getElementById("funnel-bar-offered").style.width = pct(offered) + "%";
+  document.getElementById("funnel-bar-opened").style.width = pct(opened) + "%";
+  document.getElementById("funnel-bar-purchased").style.width = pct(purchased) + "%";
 }
 
 function fillSettingsForm() {
@@ -76,16 +153,18 @@ function fillSettingsForm() {
   document.getElementById("input-telegram").value = state.telegram;
   document.getElementById("input-wallet").value = state.wallet;
   document.getElementById("input-timezone").value = state.timezone;
-  document.getElementById("input-earned-today").value = state.earnedToday;
-  document.getElementById("input-earned-week").value = state.earnedWeek;
-  document.getElementById("input-earned-month").value = state.earnedMonth;
-  document.getElementById("input-messages-today").value = state.messagesToday;
-  document.getElementById("input-ppv-today").value = state.ppvToday;
+
+  document.getElementById("input-earned-shift").value = state.earnedShift;
+  document.getElementById("input-messages-shift").value = state.messagesShift;
+  document.getElementById("input-ppv-shift").value = state.ppvShift;
   document.getElementById("input-avg-check").value = state.avgCheck;
+  document.getElementById("input-shift-length").value = state.shiftLengthHours;
+
   document.getElementById("input-paid-month").value = state.paidMonth;
   document.getElementById("input-processing").value = state.processing;
   document.getElementById("input-pending").value = state.pending;
   document.getElementById("input-rate").value = state.rate;
+
   document.getElementById("input-range-min").value = state.rangeMin;
   document.getElementById("input-range-max").value = state.rangeMax;
 }
@@ -97,12 +176,13 @@ document.getElementById("save-settings-btn").addEventListener("click", () => {
     telegram: document.getElementById("input-telegram").value.trim(),
     wallet: document.getElementById("input-wallet").value.trim(),
     timezone: document.getElementById("input-timezone").value.trim(),
-    earnedToday: Number(document.getElementById("input-earned-today").value) || 0,
-    earnedWeek: Number(document.getElementById("input-earned-week").value) || 0,
-    earnedMonth: Number(document.getElementById("input-earned-month").value) || 0,
-    messagesToday: Number(document.getElementById("input-messages-today").value) || 0,
-    ppvToday: Number(document.getElementById("input-ppv-today").value) || 0,
+
+    earnedShift: Number(document.getElementById("input-earned-shift").value) || 0,
+    messagesShift: Number(document.getElementById("input-messages-shift").value) || 0,
+    ppvShift: Number(document.getElementById("input-ppv-shift").value) || 0,
     avgCheck: Number(document.getElementById("input-avg-check").value) || 0,
+    shiftLengthHours: Math.min(12, Math.max(1, Number(document.getElementById("input-shift-length").value) || DEFAULT_STATE.shiftLengthHours)),
+
     paidMonth: Number(document.getElementById("input-paid-month").value) || 0,
     processing: Number(document.getElementById("input-processing").value) || 0,
     pending: Number(document.getElementById("input-pending").value) || 0,
@@ -124,28 +204,47 @@ document.getElementById("randomize-btn").addEventListener("click", () => {
   let rangeMax = Number(document.getElementById("input-range-max").value) || DEFAULT_STATE.rangeMax;
   if (rangeMax < rangeMin) [rangeMin, rangeMax] = [rangeMax, rangeMin];
 
-  const earnedToday = randomInt(rangeMin, rangeMax);
-  const earnedWeek = Math.round(earnedToday * (5.5 + Math.random() * 2));
-  const earnedMonth = Math.round(earnedWeek * (3.8 + Math.random() * 0.9));
-  const ppvToday = randomInt(3, 11);
-  const messagesToday = randomInt(220, 420);
-  const avgCheck = Math.max(15, Math.round((earnedToday / ppvToday) * (0.8 + Math.random() * 0.4)));
-  const paidMonth = Math.round(earnedMonth * (0.75 + Math.random() * 0.15));
-  const processing = Math.round(earnedMonth * (0.03 + Math.random() * 0.05));
-  const pending = Math.round(earnedToday * (0.5 + Math.random() * 0.7));
+  const shift = getShiftInfo();
+  const paceHours = Math.max(shift.elapsedHours, 0.3);
+
+  const earnedShift = randomInt(rangeMin, rangeMax);
+  const ppvShift = randomInt(2, 9);
+  const messagesShift = Math.round(paceHours * randomInt(35, 65));
+  const avgCheck = Math.max(15, Math.round((earnedShift / ppvShift) * (0.7 + Math.random() * 0.4)));
+  const monthlyEstimate = earnedShift * randomInt(18, 26); // rough "if every shift looked like this" projection
+  const paidMonth = Math.round(monthlyEstimate * (0.75 + Math.random() * 0.15));
+  const processing = Math.round(monthlyEstimate * (0.03 + Math.random() * 0.05));
+  const pending = Math.round(earnedShift * (0.5 + Math.random() * 0.7));
   const tipsRatio = 0.32 + Math.random() * 0.2;
+  const offerRatio = 0.22 + Math.random() * 0.16;
+  const openRatio = 0.55 + Math.random() * 0.2;
 
   state = {
     ...state,
     rangeMin, rangeMax,
-    earnedToday, earnedWeek, earnedMonth, ppvToday, messagesToday, avgCheck,
-    paidMonth, processing, pending, tipsRatio,
+    earnedShift, messagesShift, ppvShift, avgCheck,
+    paidMonth, processing, pending, tipsRatio, offerRatio, openRatio,
   };
   saveState(state);
   renderState();
   fillSettingsForm();
   rebuildCharts();
   flashStatus("randomize-status", "Randomized 🎲");
+});
+
+document.getElementById("new-shift-btn").addEventListener("click", () => {
+  state = {
+    ...state,
+    shiftStart: Date.now(),
+    earnedShift: randomInt(0, 14),
+    messagesShift: randomInt(0, 18),
+    ppvShift: 0,
+  };
+  saveState(state);
+  renderState();
+  fillSettingsForm();
+  rebuildCharts();
+  flashStatus("randomize-status", "New shift started ▶");
 });
 
 function flashStatus(id, text) {
@@ -158,11 +257,14 @@ function flashStatus(id, text) {
 renderState();
 fillSettingsForm();
 
+// live clock — keeps elapsed/remaining/pace ticking without needing a reload
+setInterval(renderState, 30000);
+
 /* ---------------- NAVIGATION ---------------- */
 const titles = {
-  overview: ["Overview", "Your stats for the selected period"],
+  overview: ["Overview", "Live stats for your current shift"],
   chats: ["My Chats", "Chats assigned to you this shift"],
-  stats: ["Statistics", "Breakdown of earnings and conversion"],
+  stats: ["Statistics", "Breakdown of earnings and conversion this shift"],
   payouts: ["Payouts", "Your earnings and payout history"],
   settings: ["Settings", "Profile and notifications"],
 };
@@ -181,13 +283,6 @@ function switchView(view) {
   [revenueChart, dailyChart, splitChart].forEach(c => c && c.resize());
 }
 
-document.querySelectorAll(".range-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".range-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-  });
-});
-
 document.querySelectorAll(".chip").forEach(chip => {
   chip.addEventListener("click", () => {
     chip.parentElement.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
@@ -204,70 +299,68 @@ Chart.defaults.borderColor = "#1a1e29";
 const GREEN = "#22c55e";
 const RED = "#ef4444";
 
-/* ---------------- CHART DATA HELPERS (real calendar dates, seeded by state) ---------------- */
+/* ---------------- CHART DATA: hour-by-hour within the current shift ---------------- */
 
-/* Builds a trailing random-walk series of `days` values ending exactly at `endValue` (today). */
-function buildTrailingSeries(days, endValue, jitterPct) {
-  const arr = new Array(days);
-  arr[days - 1] = Math.round(endValue);
-  for (let i = days - 2; i >= 0; i--) {
-    const factor = 1 + (Math.random() * 2 - 1) * jitterPct;
-    arr[i] = Math.max(20, Math.round(arr[i + 1] * factor));
-  }
-  return arr;
+/* Splits state.earnedShift across the hours that have already started (random weights),
+   leaving hours that haven't happened yet as null so they render empty. */
+function buildHourlyTotals() {
+  const shift = getShiftInfo();
+  const n = state.shiftLengthHours;
+  const activeSlots = Math.min(n, Math.max(1, Math.ceil(shift.elapsedHours - 0.02)));
+
+  const raws = Array.from({ length: activeSlots }, () => 0.5 + Math.random());
+  const sumRaw = raws.reduce((a, b) => a + b, 0);
+  const totals = raws.map(r => Math.round(state.earnedShift * (r / sumRaw)));
+  const diff = state.earnedShift - totals.reduce((a, b) => a + b, 0);
+  if (totals.length) totals[totals.length - 1] += diff;
+
+  while (totals.length < n) totals.push(null);
+  return totals;
 }
 
-function buildDateLabels(days) {
-  return Array.from({ length: days }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (days - 1 - i));
-    return d.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit" });
-  });
-}
-
-/* Real weekday abbreviations for the trailing N days, ending on today's actual weekday. */
-function buildWeekdayLabels(days) {
-  return Array.from({ length: days }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (days - 1 - i));
-    return d.toLocaleDateString("en-US", { weekday: "short" });
-  });
+function buildHourLabels() {
+  return Array.from({ length: state.shiftLengthHours }, (_, i) => fmtClockHour(state.shiftStart + i * 3600000));
 }
 
 let revenueChart = null;
 let dailyChart = null;
 let splitChart = null;
 
-function buildRevenueChart() {
-  const revLabels = buildDateLabels(14);
-  const revData = buildTrailingSeries(14, state.earnedToday, 0.22);
-
+function buildRevenueChart(labels, totals) {
   if (revenueChart) revenueChart.destroy();
   revenueChart = new Chart(document.getElementById("chart-revenue").getContext("2d"), {
     type: "line",
     data: {
-      labels: revLabels,
+      labels,
       datasets: [{
-        data: revData,
+        data: totals,
         borderWidth: 2,
-        pointRadius: 0,
-        pointHoverRadius: 4,
+        pointRadius: 2.5,
+        pointBackgroundColor: ctx => {
+          const i = ctx.dataIndex;
+          if (i === 0 || totals[i - 1] == null) return GREEN;
+          return totals[i] >= totals[i - 1] ? GREEN : RED;
+        },
+        pointBorderWidth: 0,
+        pointHoverRadius: 5,
         pointHoverBorderWidth: 0,
         tension: 0,
         fill: false,
+        spanGaps: false,
         segment: {
           borderColor: ctx => ctx.p0.parsed.y <= ctx.p1.parsed.y ? GREEN : RED,
         },
         pointHoverBackgroundColor: ctx => {
           const i = ctx.dataIndex;
-          if (i === 0) return GREEN;
-          return revData[i] >= revData[i - 1] ? GREEN : RED;
+          if (i === 0 || totals[i - 1] == null) return GREEN;
+          return totals[i] >= totals[i - 1] ? GREEN : RED;
         },
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -277,24 +370,22 @@ function buildRevenueChart() {
         }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 7 } },
+        x: { grid: { display: false } },
         y: { grid: { color: "#161a24" }, ticks: { callback: v => "$" + v } }
       }
     }
   });
 }
 
-function buildDailyChart() {
-  const dayLabels = buildWeekdayLabels(7);
-  const dayTotals = buildTrailingSeries(7, state.earnedToday, 0.25);
-  const tipsData = dayTotals.map(t => Math.round(t * state.tipsRatio));
-  const ppvData = dayTotals.map((t, i) => t - tipsData[i]);
+function buildDailyChart(labels, totals) {
+  const tipsData = totals.map(t => (t == null ? null : Math.round(t * state.tipsRatio)));
+  const ppvData = totals.map((t, i) => (t == null ? null : t - tipsData[i]));
 
   if (dailyChart) dailyChart.destroy();
   dailyChart = new Chart(document.getElementById("chart-messages").getContext("2d"), {
     type: "bar",
     data: {
-      labels: dayLabels,
+      labels,
       datasets: [
         { label: "Tips", data: tipsData, backgroundColor: GREEN, borderRadius: 2, barPercentage: 0.55 },
         { label: "PPV", data: ppvData, backgroundColor: RED, borderRadius: 2, barPercentage: 0.55 },
@@ -303,6 +394,7 @@ function buildDailyChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,
       plugins: { legend: { display: false }, tooltip: {
         backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
         padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
@@ -330,6 +422,7 @@ function buildSplitChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,
       cutout: "70%",
       plugins: { legend: { display: false }, tooltip: {
         backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
@@ -340,8 +433,10 @@ function buildSplitChart() {
 }
 
 function rebuildCharts() {
-  buildRevenueChart();
-  buildDailyChart();
+  const labels = buildHourLabels();
+  const totals = buildHourlyTotals();
+  buildRevenueChart(labels, totals);
+  buildDailyChart(labels, totals);
   buildSplitChart();
 }
 
@@ -441,13 +536,13 @@ document.getElementById("chat-list").innerHTML = randomChats(11).map(r => `
   </div>
 `).join("");
 
-/* ---------------- DATA: TOP SPENDERS (my clients) ---------------- */
+/* ---------------- DATA: TOP SPENDERS (my clients, this shift) ---------------- */
 const spenders = [
-  { user: "mike_92", model: "Kira Storm", platform: "of", spent: 640, purchases: 9, last: "2h ago" },
-  { user: "daniel.k", model: "Aria Vale", platform: "of", spent: 480, purchases: 7, last: "5h ago" },
-  { user: "shadow_x", model: "Nova Sky", platform: "fansly", spent: 410, purchases: 6, last: "1d ago" },
-  { user: "alex_vip", model: "Kira Storm", platform: "of", spent: 310, purchases: 5, last: "3h ago" },
-  { user: "johnny88", model: "Aria Vale", platform: "of", spent: 260, purchases: 4, last: "6h ago" },
+  { user: "mike_92", model: "Kira Storm", platform: "of", spent: 96, purchases: 3, last: "12m ago" },
+  { user: "daniel.k", model: "Aria Vale", platform: "of", spent: 68, purchases: 2, last: "34m ago" },
+  { user: "shadow_x", model: "Nova Sky", platform: "fansly", spent: 54, purchases: 2, last: "51m ago" },
+  { user: "alex_vip", model: "Kira Storm", platform: "of", spent: 40, purchases: 1, last: "1h ago" },
+  { user: "johnny88", model: "Aria Vale", platform: "of", spent: 32, purchases: 1, last: "1h ago" },
 ];
 
 document.getElementById("spenders-body").innerHTML = spenders.map(s => `

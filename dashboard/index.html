@@ -38,9 +38,9 @@
 
     <div class="sidebar-footer">
       <div class="shift-card">
-        <div class="shift-row"><span>Shift</span><b>17:00 – 01:00</b></div>
-        <div class="shift-row"><span>Worked</span><b>4h 12m</b></div>
-        <div class="shift-bar"><span style="width:52%"></span></div>
+        <div class="shift-row"><span>Shift</span><b id="shift-range">18:00 – 00:00</b></div>
+        <div class="shift-row"><span>Worked</span><b id="shift-worked">2h 00m</b></div>
+        <div class="shift-bar"><span id="shift-bar-fill" style="width:33%"></span></div>
       </div>
     </div>
   </aside>
@@ -51,13 +51,12 @@
     <header class="topbar">
       <div class="topbar-left">
         <h1 id="view-title">Overview</h1>
-        <p id="view-subtitle">Your stats for the selected period</p>
+        <p id="view-subtitle">Live stats for your current shift</p>
       </div>
       <div class="topbar-right">
-        <div class="range-switch">
-          <button class="range-btn">24h</button>
-          <button class="range-btn active">7 days</button>
-          <button class="range-btn">30 days</button>
+        <div class="shift-pill" id="shift-pill">
+          <i id="shift-pill-dot"></i>
+          <span id="shift-pill-text">On shift · 2h 00m left</span>
         </div>
         <button class="icon-btn" title="Notifications">
           <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 0 1-3.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -80,39 +79,39 @@
 
         <div class="kpi-grid">
           <div class="kpi-card">
-            <span class="kpi-label">Earned today</span>
-            <div class="kpi-value" id="kpi-earned-today">$186</div>
-            <div class="kpi-trend up">▲ 9% <span>vs yesterday</span></div>
+            <span class="kpi-label">Earned this shift</span>
+            <div class="kpi-value" id="kpi-earned-shift">$186</div>
+            <div class="kpi-trend up" id="kpi-earned-pace">$93 / h pace</div>
           </div>
 
           <div class="kpi-card">
-            <span class="kpi-label">Earned this week</span>
-            <div class="kpi-value" id="kpi-earned-week">$1,240</div>
-            <div class="kpi-trend up">▲ 4.6% <span>vs last week</span></div>
+            <span class="kpi-label">Messages this shift</span>
+            <div class="kpi-value" id="kpi-messages-shift">342</div>
+            <div class="kpi-trend" id="kpi-messages-pace">171 / h</div>
           </div>
 
           <div class="kpi-card">
-            <span class="kpi-label">Earned this month</span>
-            <div class="kpi-value" id="kpi-earned-month">$5,380</div>
-            <div class="kpi-trend down">▼ 2.1% <span>vs last month</span></div>
-          </div>
-
-          <div class="kpi-card">
-            <span class="kpi-label">Messages today</span>
-            <div class="kpi-value" id="kpi-messages-today">342</div>
-            <div class="kpi-trend">58 / hour</div>
-          </div>
-
-          <div class="kpi-card">
-            <span class="kpi-label">PPV sold today</span>
-            <div class="kpi-value" id="kpi-ppv-today">7</div>
-            <div class="kpi-trend up">▲ 2 <span>vs yesterday</span></div>
+            <span class="kpi-label">PPV sold this shift</span>
+            <div class="kpi-value" id="kpi-ppv-shift">7</div>
+            <div class="kpi-trend">this shift</div>
           </div>
 
           <div class="kpi-card">
             <span class="kpi-label">Average sale</span>
             <div class="kpi-value" id="kpi-avg-check">$38</div>
-            <div class="kpi-trend down">▼ $1.40</div>
+            <div class="kpi-trend">per PPV</div>
+          </div>
+
+          <div class="kpi-card">
+            <span class="kpi-label">Time elapsed</span>
+            <div class="kpi-value" id="kpi-time-elapsed">2h 00m</div>
+            <div class="kpi-trend" id="kpi-time-elapsed-sub">of 6h shift</div>
+          </div>
+
+          <div class="kpi-card">
+            <span class="kpi-label">Time remaining</span>
+            <div class="kpi-value" id="kpi-time-remaining">4h 00m</div>
+            <div class="kpi-trend" id="kpi-time-remaining-sub">ends at 00:00</div>
           </div>
         </div>
 
@@ -120,8 +119,8 @@
           <div class="card chart-card">
             <div class="card-head">
               <div>
-                <h3>My Earnings</h3>
-                <p>Last 14 days</p>
+                <h3>Earnings This Shift</h3>
+                <p>Per hour, live</p>
               </div>
             </div>
             <canvas id="chart-revenue"></canvas>
@@ -130,8 +129,8 @@
           <div class="card chart-card">
             <div class="card-head">
               <div>
-                <h3>Earnings by Day</h3>
-                <p>Tips and PPV</p>
+                <h3>Tips vs PPV by Hour</h3>
+                <p>This shift</p>
               </div>
               <div class="legend">
                 <span><i class="dot green"></i>Tips</span>
@@ -175,7 +174,7 @@
         <div class="grid-2">
           <div class="card chart-card">
             <div class="card-head">
-              <div><h3>Tips vs PPV</h3><p>Split over the last 30 days</p></div>
+              <div><h3>Tips vs PPV</h3><p>Split this shift</p></div>
             </div>
             <div class="donut-wrap">
               <div class="donut-canvas-box"><canvas id="chart-split"></canvas></div>
@@ -188,28 +187,28 @@
 
           <div class="card">
             <div class="card-head">
-              <div><h3>My Funnel</h3><p>From message to payment</p></div>
+              <div><h3>My Funnel</h3><p>From message to payment, this shift</p></div>
             </div>
             <div class="funnel">
               <div class="funnel-row">
                 <span>Messages sent</span>
-                <div class="funnel-bar"><span style="width:100%"></span></div>
-                <b>2,140</b>
+                <div class="funnel-bar"><span id="funnel-bar-messages" style="width:100%"></span></div>
+                <b id="funnel-messages">2,140</b>
               </div>
               <div class="funnel-row">
                 <span>PPV offered</span>
-                <div class="funnel-bar"><span style="width:30%"></span></div>
-                <b>642 · 30%</b>
+                <div class="funnel-bar"><span id="funnel-bar-offered" style="width:30%"></span></div>
+                <b id="funnel-offered">642 · 30%</b>
               </div>
               <div class="funnel-row">
                 <span>PPV opened</span>
-                <div class="funnel-bar"><span style="width:19%"></span></div>
-                <b>407 · 19%</b>
+                <div class="funnel-bar"><span id="funnel-bar-opened" style="width:19%"></span></div>
+                <b id="funnel-opened">407 · 19%</b>
               </div>
               <div class="funnel-row">
                 <span>PPV purchased</span>
-                <div class="funnel-bar accent"><span style="width:10%"></span></div>
-                <b>214 · 10%</b>
+                <div class="funnel-bar accent"><span id="funnel-bar-purchased" style="width:10%"></span></div>
+                <b id="funnel-purchased">214 · 10%</b>
               </div>
             </div>
           </div>
@@ -217,7 +216,7 @@
 
         <div class="card">
           <div class="card-head">
-            <div><h3>My Top Clients</h3><p>Biggest spenders in the last 30 days</p></div>
+            <div><h3>My Top Clients</h3><p>Biggest spenders this shift</p></div>
             <input class="table-search" placeholder="Search by username...">
           </div>
           <div class="table-wrap">
@@ -314,12 +313,13 @@
         <div class="card">
           <div class="card-head"><div><h3>Earnings &amp; Stats</h3><p>Edit the numbers shown across your dashboard</p></div></div>
           <div class="form-grid form-grid-narrow">
-            <label>Earned today ($)<input type="number" id="input-earned-today"></label>
-            <label>Earned this week ($)<input type="number" id="input-earned-week"></label>
-            <label>Earned this month ($)<input type="number" id="input-earned-month"></label>
-            <label>Messages today<input type="number" id="input-messages-today"></label>
-            <label>PPV sold today<input type="number" id="input-ppv-today"></label>
+            <label>Earned this shift ($)<input type="number" id="input-earned-shift"></label>
+            <label>Messages this shift<input type="number" id="input-messages-shift"></label>
+            <label>PPV sold this shift<input type="number" id="input-ppv-shift"></label>
             <label>Average sale ($)<input type="number" id="input-avg-check"></label>
+            <label>Shift length (hours)<input type="number" id="input-shift-length" min="1" max="12"></label>
+          </div>
+          <div class="form-grid form-grid-narrow">
             <label>Paid this month ($)<input type="number" id="input-paid-month"></label>
             <label>Processing ($)<input type="number" id="input-processing"></label>
             <label>Pending ($)<input type="number" id="input-pending"></label>
@@ -332,13 +332,14 @@
         </div>
 
         <div class="card">
-          <div class="card-head"><div><h3>Randomizer</h3><p>Auto-fill today's earnings within a range — the weekday and charts update to match the real date</p></div></div>
+          <div class="card-head"><div><h3>Shift &amp; Randomizer</h3><p>Auto-fill this shift's earnings within a range — time, weekday and charts stay in sync with the real clock</p></div></div>
           <div class="form-grid">
             <label>Range min ($)<input type="number" id="input-range-min"></label>
             <label>Range max ($)<input type="number" id="input-range-max"></label>
           </div>
           <div class="settings-actions">
-            <button class="btn-primary" id="randomize-btn">🎲 Randomize today</button>
+            <button class="btn-primary" id="randomize-btn">🎲 Randomize this shift</button>
+            <button class="btn-primary" id="new-shift-btn">▶ Start new shift</button>
             <span class="save-status" id="randomize-status"></span>
           </div>
         </div>
