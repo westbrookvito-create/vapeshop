@@ -13,8 +13,9 @@ const DEFAULT_STATE = {
   wallet: "TXn9k...4f2A",
   timezone: "UTC+3 (Moscow)",
 
-  // shiftStart is a real timestamp — everything shift-related is computed live from it
-  shiftStart: Date.now() - 2 * 3600 * 1000,
+  // The dashboard always represents an already-finished shift.
+  // shiftEndedAt is the moment that shift wrapped — everything below is derived from it.
+  shiftEndedAt: Date.now(),
   shiftLengthHours: 6,
 
   earnedShift: 186,
@@ -54,19 +55,14 @@ function money(n) {
   return "$" + Number(n || 0).toLocaleString("en-US");
 }
 
-/* ---------------- SHIFT CLOCK (real time) ---------------- */
+/* ---------------- SHIFT WINDOW (a completed shift ending at state.shiftEndedAt) ---------------- */
 function getShiftInfo() {
   const lengthMs = Math.max(1, state.shiftLengthHours) * 3600000;
-  const elapsedMsRaw = Date.now() - state.shiftStart;
-  const elapsedMs = Math.min(Math.max(elapsedMsRaw, 0), lengthMs);
-  const remainingMs = Math.max(lengthMs - elapsedMsRaw, 0);
   return {
     lengthMs,
-    elapsedMs,
-    remainingMs,
-    elapsedHours: elapsedMs / 3600000,
-    progressPct: Math.min(100, (elapsedMs / lengthMs) * 100),
-    ended: elapsedMsRaw >= lengthMs,
+    start: state.shiftEndedAt - lengthMs,
+    end: state.shiftEndedAt,
+    agoMs: Math.max(0, Date.now() - state.shiftEndedAt),
   };
 }
 
@@ -75,6 +71,15 @@ function fmtDuration(ms) {
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
   return `${h}h ${String(m).padStart(2, "0")}m`;
+}
+
+function fmtAgo(ms) {
+  const totalMin = Math.round(ms / 60000);
+  if (totalMin < 1) return "just now";
+  if (totalMin < 60) return `${totalMin}m ago`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m ? `${h}h ${m}m ago` : `${h}h ago`;
 }
 
 function fmtClock(ts) {
@@ -88,23 +93,22 @@ function fmtClockHour(ts) {
 /* ---------------- RENDER ---------------- */
 function renderState() {
   const shift = getShiftInfo();
-  const paceHours = Math.max(shift.elapsedHours, 0.15); // avoid a huge number right at shift start
+
+  const tipsAmt = Math.round(state.earnedShift * state.tipsRatio);
+  const ppvAmt = state.earnedShift - tipsAmt;
 
   document.getElementById("kpi-earned-shift").textContent = money(state.earnedShift);
-  document.getElementById("kpi-earned-pace").textContent = money(Math.round(state.earnedShift / paceHours)) + " / h pace";
+  document.getElementById("kpi-earned-split").textContent = `${money(tipsAmt)} tips · ${money(ppvAmt)} PPV`;
 
   document.getElementById("kpi-messages-shift").textContent = Number(state.messagesShift || 0).toLocaleString("en-US");
-  document.getElementById("kpi-messages-pace").textContent = Math.round(state.messagesShift / paceHours) + " / h";
+  document.getElementById("kpi-messages-pace").textContent = Math.round(state.messagesShift / state.shiftLengthHours) + " / h avg";
 
   document.getElementById("kpi-ppv-shift").textContent = state.ppvShift;
   document.getElementById("kpi-avg-check").textContent = money(state.avgCheck);
 
-  document.getElementById("kpi-time-elapsed").textContent = fmtDuration(shift.elapsedMs);
-  document.getElementById("kpi-time-elapsed-sub").textContent = `of ${state.shiftLengthHours}h shift`;
-  document.getElementById("kpi-time-remaining").textContent = shift.ended ? "0h 00m" : fmtDuration(shift.remainingMs);
-  document.getElementById("kpi-time-remaining-sub").textContent = shift.ended
-    ? "shift ended"
-    : `ends at ${fmtClock(state.shiftStart + shift.lengthMs)}`;
+  document.getElementById("kpi-duration").textContent = state.shiftLengthHours + "h";
+  document.getElementById("kpi-duration-sub").textContent = `${fmtClock(shift.start)} – ${fmtClock(shift.end)}`;
+  document.getElementById("kpi-ended").textContent = fmtAgo(shift.agoMs);
 
   document.getElementById("kpi-paid-month").textContent = money(state.paidMonth);
   document.getElementById("kpi-processing").textContent = money(state.processing);
@@ -115,19 +119,13 @@ function renderState() {
   document.getElementById("user-avatar").textContent = initials(state.name || "??");
 
   // sidebar shift widget
-  document.getElementById("shift-range").textContent = `${fmtClock(state.shiftStart)} – ${fmtClock(state.shiftStart + shift.lengthMs)}`;
-  document.getElementById("shift-worked").textContent = fmtDuration(shift.elapsedMs);
-  document.getElementById("shift-bar-fill").style.width = shift.progressPct + "%";
+  document.getElementById("shift-range").textContent = `${fmtClock(shift.start)} – ${fmtClock(shift.end)}`;
+  document.getElementById("shift-duration").textContent = state.shiftLengthHours + "h";
 
   // topbar shift pill
-  const pill = document.getElementById("shift-pill");
-  const pillText = document.getElementById("shift-pill-text");
-  pill.classList.toggle("ended", shift.ended);
-  pillText.textContent = shift.ended ? "Shift ended" : `On shift · ${fmtDuration(shift.remainingMs)} left`;
+  document.getElementById("shift-pill-text").textContent = `Shift ended · ${fmtAgo(shift.agoMs)}`;
 
   // tips vs PPV split (this shift)
-  const tipsAmt = Math.round(state.earnedShift * state.tipsRatio);
-  const ppvAmt = state.earnedShift - tipsAmt;
   document.getElementById("split-tips-pct").textContent = Math.round(state.tipsRatio * 100) + "%";
   document.getElementById("split-ppv-pct").textContent = Math.round((1 - state.tipsRatio) * 100) + "%";
   document.getElementById("split-tips-amt").textContent = money(tipsAmt);
@@ -148,6 +146,11 @@ function renderState() {
   document.getElementById("funnel-bar-purchased").style.width = pct(purchased) + "%";
 }
 
+function updateDerivedPreview() {
+  document.getElementById("derived-preview").textContent =
+    `Derived: ${state.messagesShift.toLocaleString("en-US")} messages · ${state.ppvShift} PPV sold · ${money(state.avgCheck)} avg sale`;
+}
+
 function fillSettingsForm() {
   document.getElementById("input-name").value = state.name;
   document.getElementById("input-telegram").value = state.telegram;
@@ -155,9 +158,6 @@ function fillSettingsForm() {
   document.getElementById("input-timezone").value = state.timezone;
 
   document.getElementById("input-earned-shift").value = state.earnedShift;
-  document.getElementById("input-messages-shift").value = state.messagesShift;
-  document.getElementById("input-ppv-shift").value = state.ppvShift;
-  document.getElementById("input-avg-check").value = state.avgCheck;
   document.getElementById("input-shift-length").value = state.shiftLengthHours;
 
   document.getElementById("input-paid-month").value = state.paidMonth;
@@ -167,22 +167,26 @@ function fillSettingsForm() {
 
   document.getElementById("input-range-min").value = state.rangeMin;
   document.getElementById("input-range-max").value = state.rangeMax;
+
+  updateDerivedPreview();
 }
 
-document.getElementById("save-settings-btn").addEventListener("click", () => {
+document.getElementById("save-profile-btn").addEventListener("click", () => {
   state = {
     ...state,
     name: document.getElementById("input-name").value.trim() || DEFAULT_STATE.name,
     telegram: document.getElementById("input-telegram").value.trim(),
     wallet: document.getElementById("input-wallet").value.trim(),
     timezone: document.getElementById("input-timezone").value.trim(),
+  };
+  saveState(state);
+  renderState();
+  flashStatus("save-profile-status", "Saved ✓");
+});
 
-    earnedShift: Number(document.getElementById("input-earned-shift").value) || 0,
-    messagesShift: Number(document.getElementById("input-messages-shift").value) || 0,
-    ppvShift: Number(document.getElementById("input-ppv-shift").value) || 0,
-    avgCheck: Number(document.getElementById("input-avg-check").value) || 0,
-    shiftLengthHours: Math.min(12, Math.max(1, Number(document.getElementById("input-shift-length").value) || DEFAULT_STATE.shiftLengthHours)),
-
+document.getElementById("save-payouts-btn").addEventListener("click", () => {
+  state = {
+    ...state,
     paidMonth: Number(document.getElementById("input-paid-month").value) || 0,
     processing: Number(document.getElementById("input-processing").value) || 0,
     pending: Number(document.getElementById("input-pending").value) || 0,
@@ -190,26 +194,17 @@ document.getElementById("save-settings-btn").addEventListener("click", () => {
   };
   saveState(state);
   renderState();
-  rebuildCharts();
-  flashStatus("save-status", "Saved ✓");
+  flashStatus("save-payouts-status", "Saved ✓");
 });
 
-/* ---------------- RANDOMIZER ---------------- */
+/* ---------------- DERIVE EVERYTHING FROM A SINGLE "EARNED THIS SHIFT" NUMBER ---------------- */
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-document.getElementById("randomize-btn").addEventListener("click", () => {
-  let rangeMin = Number(document.getElementById("input-range-min").value) || DEFAULT_STATE.rangeMin;
-  let rangeMax = Number(document.getElementById("input-range-max").value) || DEFAULT_STATE.rangeMax;
-  if (rangeMax < rangeMin) [rangeMin, rangeMax] = [rangeMax, rangeMin];
-
-  const shift = getShiftInfo();
-  const paceHours = Math.max(shift.elapsedHours, 0.3);
-
-  const earnedShift = randomInt(rangeMin, rangeMax);
+function applyEarnedShift(earnedShift, shiftLengthHours) {
   const ppvShift = randomInt(2, 9);
-  const messagesShift = Math.round(paceHours * randomInt(35, 65));
+  const messagesShift = Math.round(shiftLengthHours * randomInt(35, 65));
   const avgCheck = Math.max(15, Math.round((earnedShift / ppvShift) * (0.7 + Math.random() * 0.4)));
   const monthlyEstimate = earnedShift * randomInt(18, 26); // rough "if every shift looked like this" projection
   const paidMonth = Math.round(monthlyEstimate * (0.75 + Math.random() * 0.15));
@@ -221,7 +216,8 @@ document.getElementById("randomize-btn").addEventListener("click", () => {
 
   state = {
     ...state,
-    rangeMin, rangeMax,
+    shiftEndedAt: Date.now(),
+    shiftLengthHours,
     earnedShift, messagesShift, ppvShift, avgCheck,
     paidMonth, processing, pending, tipsRatio, offerRatio, openRatio,
   };
@@ -229,22 +225,23 @@ document.getElementById("randomize-btn").addEventListener("click", () => {
   renderState();
   fillSettingsForm();
   rebuildCharts();
-  flashStatus("randomize-status", "Randomized 🎲");
+}
+
+document.getElementById("apply-earned-btn").addEventListener("click", () => {
+  const earnedShift = Math.max(0, Number(document.getElementById("input-earned-shift").value) || 0);
+  const shiftLengthHours = Math.min(12, Math.max(1, Number(document.getElementById("input-shift-length").value) || DEFAULT_STATE.shiftLengthHours));
+  applyEarnedShift(earnedShift, shiftLengthHours);
+  flashStatus("apply-status", "Applied ✓");
 });
 
-document.getElementById("new-shift-btn").addEventListener("click", () => {
-  state = {
-    ...state,
-    shiftStart: Date.now(),
-    earnedShift: randomInt(0, 14),
-    messagesShift: randomInt(0, 18),
-    ppvShift: 0,
-  };
-  saveState(state);
-  renderState();
-  fillSettingsForm();
-  rebuildCharts();
-  flashStatus("randomize-status", "New shift started ▶");
+document.getElementById("randomize-btn").addEventListener("click", () => {
+  let rangeMin = Number(document.getElementById("input-range-min").value) || DEFAULT_STATE.rangeMin;
+  let rangeMax = Number(document.getElementById("input-range-max").value) || DEFAULT_STATE.rangeMax;
+  if (rangeMax < rangeMin) [rangeMin, rangeMax] = [rangeMax, rangeMin];
+
+  state = { ...state, rangeMin, rangeMax };
+  applyEarnedShift(randomInt(rangeMin, rangeMax), state.shiftLengthHours);
+  flashStatus("randomize-status", "Randomized 🎲");
 });
 
 function flashStatus(id, text) {
@@ -257,13 +254,13 @@ function flashStatus(id, text) {
 renderState();
 fillSettingsForm();
 
-// live clock — keeps elapsed/remaining/pace ticking without needing a reload
+// keeps "shift ended Xm ago" ticking without needing a reload — nothing else changes
 setInterval(renderState, 30000);
 
 /* ---------------- NAVIGATION ---------------- */
 const titles = {
-  overview: ["Overview", "Live stats for your current shift"],
-  chats: ["My Chats", "Chats assigned to you this shift"],
+  overview: ["Overview", "Your stats after this shift"],
+  chats: ["My Chats", "Chats from this shift"],
   stats: ["Statistics", "Breakdown of earnings and conversion this shift"],
   payouts: ["Payouts", "Your earnings and payout history"],
   settings: ["Settings", "Profile and notifications"],
@@ -299,27 +296,23 @@ Chart.defaults.borderColor = "#1a1e29";
 const GREEN = "#22c55e";
 const RED = "#ef4444";
 
-/* ---------------- CHART DATA: hour-by-hour within the current shift ---------------- */
+/* ---------------- CHART DATA: hour-by-hour across the completed shift ---------------- */
 
-/* Splits state.earnedShift across the hours that have already started (random weights),
-   leaving hours that haven't happened yet as null so they render empty. */
+/* Splits state.earnedShift across every hour of the shift (random weights, all hours filled
+   in since the shift is already over). */
 function buildHourlyTotals() {
-  const shift = getShiftInfo();
   const n = state.shiftLengthHours;
-  const activeSlots = Math.min(n, Math.max(1, Math.ceil(shift.elapsedHours - 0.02)));
-
-  const raws = Array.from({ length: activeSlots }, () => 0.5 + Math.random());
+  const raws = Array.from({ length: n }, () => 0.5 + Math.random());
   const sumRaw = raws.reduce((a, b) => a + b, 0);
   const totals = raws.map(r => Math.round(state.earnedShift * (r / sumRaw)));
   const diff = state.earnedShift - totals.reduce((a, b) => a + b, 0);
   if (totals.length) totals[totals.length - 1] += diff;
-
-  while (totals.length < n) totals.push(null);
   return totals;
 }
 
 function buildHourLabels() {
-  return Array.from({ length: state.shiftLengthHours }, (_, i) => fmtClockHour(state.shiftStart + i * 3600000));
+  const shift = getShiftInfo();
+  return Array.from({ length: state.shiftLengthHours }, (_, i) => fmtClockHour(shift.start + i * 3600000));
 }
 
 let revenueChart = null;

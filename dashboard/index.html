@@ -39,8 +39,8 @@
     <div class="sidebar-footer">
       <div class="shift-card">
         <div class="shift-row"><span>Shift</span><b id="shift-range">18:00 – 00:00</b></div>
-        <div class="shift-row"><span>Worked</span><b id="shift-worked">2h 00m</b></div>
-        <div class="shift-bar"><span id="shift-bar-fill" style="width:33%"></span></div>
+        <div class="shift-row"><span>Duration</span><b id="shift-duration">6h</b></div>
+        <div class="shift-status" id="shift-status-badge">✓ Completed</div>
       </div>
     </div>
   </aside>
@@ -51,12 +51,12 @@
     <header class="topbar">
       <div class="topbar-left">
         <h1 id="view-title">Overview</h1>
-        <p id="view-subtitle">Live stats for your current shift</p>
+        <p id="view-subtitle">Your stats after this shift</p>
       </div>
       <div class="topbar-right">
-        <div class="shift-pill" id="shift-pill">
+        <div class="shift-pill ended" id="shift-pill">
           <i id="shift-pill-dot"></i>
-          <span id="shift-pill-text">On shift · 2h 00m left</span>
+          <span id="shift-pill-text">Shift ended · just now</span>
         </div>
         <button class="icon-btn" title="Notifications">
           <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 0 1-3.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -81,13 +81,13 @@
           <div class="kpi-card">
             <span class="kpi-label">Earned this shift</span>
             <div class="kpi-value" id="kpi-earned-shift">$186</div>
-            <div class="kpi-trend up" id="kpi-earned-pace">$93 / h pace</div>
+            <div class="kpi-trend up" id="kpi-earned-split">$76 tips · $110 PPV</div>
           </div>
 
           <div class="kpi-card">
             <span class="kpi-label">Messages this shift</span>
             <div class="kpi-value" id="kpi-messages-shift">342</div>
-            <div class="kpi-trend" id="kpi-messages-pace">171 / h</div>
+            <div class="kpi-trend" id="kpi-messages-pace">57 / h avg</div>
           </div>
 
           <div class="kpi-card">
@@ -103,15 +103,15 @@
           </div>
 
           <div class="kpi-card">
-            <span class="kpi-label">Time elapsed</span>
-            <div class="kpi-value" id="kpi-time-elapsed">2h 00m</div>
-            <div class="kpi-trend" id="kpi-time-elapsed-sub">of 6h shift</div>
+            <span class="kpi-label">Shift duration</span>
+            <div class="kpi-value" id="kpi-duration">6h</div>
+            <div class="kpi-trend" id="kpi-duration-sub">18:00 – 00:00</div>
           </div>
 
           <div class="kpi-card">
-            <span class="kpi-label">Time remaining</span>
-            <div class="kpi-value" id="kpi-time-remaining">4h 00m</div>
-            <div class="kpi-trend" id="kpi-time-remaining-sub">ends at 00:00</div>
+            <span class="kpi-label">Ended</span>
+            <div class="kpi-value" id="kpi-ended">just now</div>
+            <div class="kpi-trend">shift complete</div>
           </div>
         </div>
 
@@ -120,7 +120,7 @@
             <div class="card-head">
               <div>
                 <h3>Earnings This Shift</h3>
-                <p>Per hour, live</p>
+                <p>Full breakdown, per hour</p>
               </div>
             </div>
             <canvas id="chart-revenue"></canvas>
@@ -298,6 +298,10 @@
               <label>Payout wallet (USDT)<input type="text" id="input-wallet"></label>
               <label>Timezone<input type="text" id="input-timezone"></label>
             </div>
+            <div class="settings-actions">
+              <button class="btn-primary" id="save-profile-btn">Save</button>
+              <span class="save-status" id="save-profile-status"></span>
+            </div>
           </div>
           <div class="card">
             <div class="card-head"><div><h3>Notifications</h3><p>What gets sent to Telegram</p></div></div>
@@ -311,14 +315,32 @@
         </div>
 
         <div class="card">
-          <div class="card-head"><div><h3>Earnings &amp; Stats</h3><p>Edit the numbers shown across your dashboard</p></div></div>
-          <div class="form-grid form-grid-narrow">
+          <div class="card-head"><div><h3>Shift Earnings</h3><p>Set what you earned — messages, PPV, splits and payouts recalculate from it</p></div></div>
+          <div class="form-grid">
             <label>Earned this shift ($)<input type="number" id="input-earned-shift"></label>
-            <label>Messages this shift<input type="number" id="input-messages-shift"></label>
-            <label>PPV sold this shift<input type="number" id="input-ppv-shift"></label>
-            <label>Average sale ($)<input type="number" id="input-avg-check"></label>
             <label>Shift length (hours)<input type="number" id="input-shift-length" min="1" max="12"></label>
           </div>
+          <div class="settings-actions">
+            <button class="btn-primary" id="apply-earned-btn">Apply</button>
+            <span class="save-status" id="apply-status"></span>
+          </div>
+          <p class="derived-preview" id="derived-preview">Derived: 94 messages · 5 PPV sold · $34 avg sale</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Randomizer</h3><p>Generate a new completed shift within a $ range</p></div></div>
+          <div class="form-grid">
+            <label>Range min ($)<input type="number" id="input-range-min"></label>
+            <label>Range max ($)<input type="number" id="input-range-max"></label>
+          </div>
+          <div class="settings-actions">
+            <button class="btn-primary" id="randomize-btn">🎲 Randomize shift</button>
+            <span class="save-status" id="randomize-status"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Payouts</h3><p>Longer-term payout figures, independent of a single shift</p></div></div>
           <div class="form-grid form-grid-narrow">
             <label>Paid this month ($)<input type="number" id="input-paid-month"></label>
             <label>Processing ($)<input type="number" id="input-processing"></label>
@@ -326,21 +348,8 @@
             <label>My rate (%)<input type="number" id="input-rate"></label>
           </div>
           <div class="settings-actions">
-            <button class="btn-primary" id="save-settings-btn">Save changes</button>
-            <span class="save-status" id="save-status"></span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-head"><div><h3>Shift &amp; Randomizer</h3><p>Auto-fill this shift's earnings within a range — time, weekday and charts stay in sync with the real clock</p></div></div>
-          <div class="form-grid">
-            <label>Range min ($)<input type="number" id="input-range-min"></label>
-            <label>Range max ($)<input type="number" id="input-range-max"></label>
-          </div>
-          <div class="settings-actions">
-            <button class="btn-primary" id="randomize-btn">🎲 Randomize this shift</button>
-            <button class="btn-primary" id="new-shift-btn">▶ Start new shift</button>
-            <span class="save-status" id="randomize-status"></span>
+            <button class="btn-primary" id="save-payouts-btn">Save</button>
+            <span class="save-status" id="save-payouts-status"></span>
           </div>
         </div>
       </section>
