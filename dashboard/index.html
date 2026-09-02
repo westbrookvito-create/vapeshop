@@ -180,8 +180,8 @@
             <div class="donut-wrap">
               <div class="donut-canvas-box"><canvas id="chart-split"></canvas></div>
               <div class="donut-legend">
-                <div><i class="dot green"></i>Tips <strong>41%</strong><span>$2,206</span></div>
-                <div><i class="dot red"></i>PPV <strong>59%</strong><span>$3,174</span></div>
+                <div><i class="dot green"></i>Tips <strong id="split-tips-pct">41%</strong><span id="split-tips-amt">$2,206</span></div>
+                <div><i class="dot red"></i>PPV <strong id="split-ppv-pct">59%</strong><span id="split-ppv-amt">$3,174</span></div>
               </div>
             </div>
           </div>
@@ -328,6 +328,18 @@
           <div class="settings-actions">
             <button class="btn-primary" id="save-settings-btn">Save changes</button>
             <span class="save-status" id="save-status"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Randomizer</h3><p>Auto-fill today's earnings within a range — the weekday and charts update to match the real date</p></div></div>
+          <div class="form-grid">
+            <label>Range min ($)<input type="number" id="input-range-min"></label>
+            <label>Range max ($)<input type="number" id="input-range-max"></label>
+          </div>
+          <div class="settings-actions">
+            <button class="btn-primary" id="randomize-btn">🎲 Randomize today</button>
+            <span class="save-status" id="randomize-status"></span>
           </div>
         </div>
       </section>

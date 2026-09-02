@@ -22,6 +22,9 @@ const DEFAULT_STATE = {
   processing: 640,
   pending: 180,
   rate: 15,
+  rangeMin: 120,
+  rangeMax: 260,
+  tipsRatio: 0.41,
 };
 
 function loadState() {
@@ -59,6 +62,13 @@ function renderState() {
 
   document.getElementById("user-name").textContent = state.name;
   document.getElementById("user-avatar").textContent = initials(state.name || "??");
+
+  const tipsAmt = Math.round(state.earnedMonth * state.tipsRatio);
+  const ppvAmt = state.earnedMonth - tipsAmt;
+  document.getElementById("split-tips-pct").textContent = Math.round(state.tipsRatio * 100) + "%";
+  document.getElementById("split-ppv-pct").textContent = Math.round((1 - state.tipsRatio) * 100) + "%";
+  document.getElementById("split-tips-amt").textContent = money(tipsAmt);
+  document.getElementById("split-ppv-amt").textContent = money(ppvAmt);
 }
 
 function fillSettingsForm() {
@@ -76,10 +86,13 @@ function fillSettingsForm() {
   document.getElementById("input-processing").value = state.processing;
   document.getElementById("input-pending").value = state.pending;
   document.getElementById("input-rate").value = state.rate;
+  document.getElementById("input-range-min").value = state.rangeMin;
+  document.getElementById("input-range-max").value = state.rangeMax;
 }
 
 document.getElementById("save-settings-btn").addEventListener("click", () => {
   state = {
+    ...state,
     name: document.getElementById("input-name").value.trim() || DEFAULT_STATE.name,
     telegram: document.getElementById("input-telegram").value.trim(),
     wallet: document.getElementById("input-wallet").value.trim(),
@@ -97,11 +110,50 @@ document.getElementById("save-settings-btn").addEventListener("click", () => {
   };
   saveState(state);
   renderState();
-  const status = document.getElementById("save-status");
-  status.textContent = "Saved ✓";
+  rebuildCharts();
+  flashStatus("save-status", "Saved ✓");
+});
+
+/* ---------------- RANDOMIZER ---------------- */
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+document.getElementById("randomize-btn").addEventListener("click", () => {
+  let rangeMin = Number(document.getElementById("input-range-min").value) || DEFAULT_STATE.rangeMin;
+  let rangeMax = Number(document.getElementById("input-range-max").value) || DEFAULT_STATE.rangeMax;
+  if (rangeMax < rangeMin) [rangeMin, rangeMax] = [rangeMax, rangeMin];
+
+  const earnedToday = randomInt(rangeMin, rangeMax);
+  const earnedWeek = Math.round(earnedToday * (5.5 + Math.random() * 2));
+  const earnedMonth = Math.round(earnedWeek * (3.8 + Math.random() * 0.9));
+  const ppvToday = randomInt(3, 11);
+  const messagesToday = randomInt(220, 420);
+  const avgCheck = Math.max(15, Math.round((earnedToday / ppvToday) * (0.8 + Math.random() * 0.4)));
+  const paidMonth = Math.round(earnedMonth * (0.75 + Math.random() * 0.15));
+  const processing = Math.round(earnedMonth * (0.03 + Math.random() * 0.05));
+  const pending = Math.round(earnedToday * (0.5 + Math.random() * 0.7));
+  const tipsRatio = 0.32 + Math.random() * 0.2;
+
+  state = {
+    ...state,
+    rangeMin, rangeMax,
+    earnedToday, earnedWeek, earnedMonth, ppvToday, messagesToday, avgCheck,
+    paidMonth, processing, pending, tipsRatio,
+  };
+  saveState(state);
+  renderState();
+  fillSettingsForm();
+  rebuildCharts();
+  flashStatus("randomize-status", "Randomized 🎲");
+});
+
+function flashStatus(id, text) {
+  const status = document.getElementById(id);
+  status.textContent = text;
   status.classList.add("show");
   setTimeout(() => status.classList.remove("show"), 1800);
-});
+}
 
 renderState();
 fillSettingsForm();
@@ -125,6 +177,8 @@ function switchView(view) {
   const [title, subtitle] = titles[view];
   document.getElementById("view-title").textContent = title;
   document.getElementById("view-subtitle").textContent = subtitle;
+  // charts rebuilt while their tab was hidden measure a 0×0 canvas — force a resize now that it's visible
+  [revenueChart, dailyChart, splitChart].forEach(c => c && c.resize());
 }
 
 document.querySelectorAll(".range-btn").forEach(btn => {
@@ -150,97 +204,148 @@ Chart.defaults.borderColor = "#1a1e29";
 const GREEN = "#22c55e";
 const RED = "#ef4444";
 
-/* Earnings line chart — sharp straight segments, green up / red down */
-const revLabels = Array.from({ length: 14 }, (_, i) => {
-  const d = new Date();
-  d.setDate(d.getDate() - (13 - i));
-  return d.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit" });
-});
-const revData = [142, 168, 121, 195, 176, 210, 158, 224, 201, 245, 189, 260, 232, 186];
+/* ---------------- CHART DATA HELPERS (real calendar dates, seeded by state) ---------------- */
 
-new Chart(document.getElementById("chart-revenue").getContext("2d"), {
-  type: "line",
-  data: {
-    labels: revLabels,
-    datasets: [{
-      data: revData,
-      borderWidth: 2,
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      pointHoverBorderWidth: 0,
-      tension: 0,
-      fill: false,
-      segment: {
-        borderColor: ctx => ctx.p0.parsed.y <= ctx.p1.parsed.y ? GREEN : RED,
+/* Builds a trailing random-walk series of `days` values ending exactly at `endValue` (today). */
+function buildTrailingSeries(days, endValue, jitterPct) {
+  const arr = new Array(days);
+  arr[days - 1] = Math.round(endValue);
+  for (let i = days - 2; i >= 0; i--) {
+    const factor = 1 + (Math.random() * 2 - 1) * jitterPct;
+    arr[i] = Math.max(20, Math.round(arr[i + 1] * factor));
+  }
+  return arr;
+}
+
+function buildDateLabels(days) {
+  return Array.from({ length: days }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (days - 1 - i));
+    return d.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit" });
+  });
+}
+
+/* Real weekday abbreviations for the trailing N days, ending on today's actual weekday. */
+function buildWeekdayLabels(days) {
+  return Array.from({ length: days }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (days - 1 - i));
+    return d.toLocaleDateString("en-US", { weekday: "short" });
+  });
+}
+
+let revenueChart = null;
+let dailyChart = null;
+let splitChart = null;
+
+function buildRevenueChart() {
+  const revLabels = buildDateLabels(14);
+  const revData = buildTrailingSeries(14, state.earnedToday, 0.22);
+
+  if (revenueChart) revenueChart.destroy();
+  revenueChart = new Chart(document.getElementById("chart-revenue").getContext("2d"), {
+    type: "line",
+    data: {
+      labels: revLabels,
+      datasets: [{
+        data: revData,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        pointHoverBorderWidth: 0,
+        tension: 0,
+        fill: false,
+        segment: {
+          borderColor: ctx => ctx.p0.parsed.y <= ctx.p1.parsed.y ? GREEN : RED,
+        },
+        pointHoverBackgroundColor: ctx => {
+          const i = ctx.dataIndex;
+          if (i === 0) return GREEN;
+          return revData[i] >= revData[i - 1] ? GREEN : RED;
+        },
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
+          padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
+          callbacks: { label: (ctx) => "  $" + ctx.parsed.y }
+        }
       },
-      pointHoverBackgroundColor: ctx => {
-        const i = ctx.dataIndex;
-        if (i === 0) return GREEN;
-        return revData[i] >= revData[i - 1] ? GREEN : RED;
-      },
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
+      scales: {
+        x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 7 } },
+        y: { grid: { color: "#161a24" }, ticks: { callback: v => "$" + v } }
+      }
+    }
+  });
+}
+
+function buildDailyChart() {
+  const dayLabels = buildWeekdayLabels(7);
+  const dayTotals = buildTrailingSeries(7, state.earnedToday, 0.25);
+  const tipsData = dayTotals.map(t => Math.round(t * state.tipsRatio));
+  const ppvData = dayTotals.map((t, i) => t - tipsData[i]);
+
+  if (dailyChart) dailyChart.destroy();
+  dailyChart = new Chart(document.getElementById("chart-messages").getContext("2d"), {
+    type: "bar",
+    data: {
+      labels: dayLabels,
+      datasets: [
+        { label: "Tips", data: tipsData, backgroundColor: GREEN, borderRadius: 2, barPercentage: 0.55 },
+        { label: "PPV", data: ppvData, backgroundColor: RED, borderRadius: 2, barPercentage: 0.55 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
         backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
         padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
-        callbacks: { label: (ctx) => "  $" + ctx.parsed.y }
+        callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y}` }
+      }},
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: "#161a24" }, ticks: { callback: v => "$" + v } }
       }
+    }
+  });
+}
+
+function buildSplitChart() {
+  const tipsPct = Math.round(state.tipsRatio * 100);
+  const ppvPct = 100 - tipsPct;
+
+  if (splitChart) splitChart.destroy();
+  splitChart = new Chart(document.getElementById("chart-split").getContext("2d"), {
+    type: "doughnut",
+    data: {
+      labels: ["Tips", "PPV"],
+      datasets: [{ data: [tipsPct, ppvPct], backgroundColor: [GREEN, RED], borderColor: "#12151d", borderWidth: 3 }]
     },
-    scales: {
-      x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 7 } },
-      y: { grid: { color: "#161a24" }, ticks: { callback: v => "$" + v } }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "70%",
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
+        padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
+      }}
     }
-  }
-});
+  });
+}
 
-/* Tips vs PPV bar chart — flat green / red */
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-new Chart(document.getElementById("chart-messages").getContext("2d"), {
-  type: "bar",
-  data: {
-    labels: days,
-    datasets: [
-      { label: "Tips", data: [42, 58, 30, 66, 74, 96, 51], backgroundColor: GREEN, borderRadius: 2, barPercentage: 0.55 },
-      { label: "PPV", data: [80, 64, 96, 58, 112, 140, 90], backgroundColor: RED, borderRadius: 2, barPercentage: 0.55 },
-    ]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false }, tooltip: {
-      backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
-      padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
-      callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y}` }
-    }},
-    scales: {
-      x: { grid: { display: false } },
-      y: { grid: { color: "#161a24" }, ticks: { callback: v => "$" + v } }
-    }
-  }
-});
+function rebuildCharts() {
+  buildRevenueChart();
+  buildDailyChart();
+  buildSplitChart();
+}
 
-/* Tips vs PPV donut — flat colors */
-new Chart(document.getElementById("chart-split").getContext("2d"), {
-  type: "doughnut",
-  data: {
-    labels: ["Tips", "PPV"],
-    datasets: [{ data: [41, 59], backgroundColor: [GREEN, RED], borderColor: "#12151d", borderWidth: 3 }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: "70%",
-    plugins: { legend: { display: false }, tooltip: {
-      backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
-      padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
-    }}
-  }
-});
+rebuildCharts();
 
 /* ---------------- DATA: MY MODELS TODAY ---------------- */
 const myModels = [
