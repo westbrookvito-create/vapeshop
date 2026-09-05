@@ -30,6 +30,10 @@
         <svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 10.5h19" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="14.5" r="1.2" fill="currentColor"/></svg>
         Payouts
       </button>
+      <button class="nav-item" data-view="monthly">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9.5h18M8 6V2.5M16 6V2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="6.5" y="12.5" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="10.5" y="12.5" width="3" height="3" rx="0.5" fill="currentColor" opacity="0.4"/><rect x="14.5" y="12.5" width="3" height="3" rx="0.5" fill="currentColor" opacity="0.4"/></svg>
+        Monthly
+      </button>
       <button class="nav-item" data-view="settings">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13a7.9 7.9 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.9 7.9 0 0 0-1.7-1L15 3h-4l-.3 2.9a7.9 7.9 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.9 7.9 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.9 7.9 0 0 0 1.7 1L11 21h4l.3-2.9a7.9 7.9 0 0 0 1.7-1l2.5 1 2-3.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
         Settings
@@ -283,6 +287,81 @@
               </thead>
               <tbody id="payouts-body"></tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== MONTHLY ===== -->
+      <section class="view" id="view-monthly">
+        <div class="month-nav">
+          <button class="icon-btn" id="month-prev" title="Previous month">
+            <svg viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <h2 id="month-label">September 2026</h2>
+          <button class="icon-btn" id="month-next" title="Next month">
+            <svg viewBox="0 0 24 24"><path d="M9 4l8 8-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="link-btn" id="month-today">Today</button>
+        </div>
+
+        <div class="kpi-grid kpi-grid-5">
+          <div class="kpi-card">
+            <span class="kpi-label">Earned this month</span>
+            <div class="kpi-value" id="kpi-month-earned">$0</div>
+            <div class="kpi-trend" id="kpi-month-earned-sub">0 shifts</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Days worked</span>
+            <div class="kpi-value" id="kpi-month-worked">0 / 30</div>
+            <div class="kpi-trend" id="kpi-month-off">0 days off</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Avg per shift</span>
+            <div class="kpi-value" id="kpi-month-avg">$0</div>
+            <div class="kpi-trend">per shift</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Avg per day worked</span>
+            <div class="kpi-value" id="kpi-month-avgday">$0</div>
+            <div class="kpi-trend">per day</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Best day</span>
+            <div class="kpi-value" id="kpi-month-best">$0</div>
+            <div class="kpi-trend" id="kpi-month-best-sub">—</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Earnings Calendar</h3><p>Click a day to enter what you earned</p></div>
+            <div class="legend">
+              <span><i class="dot green"></i>Worked</span>
+              <span><i class="dot dim"></i>Day off</span>
+            </div>
+          </div>
+          <div class="cal-weekdays">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+
+        <div class="card" id="day-editor-card" hidden>
+          <div class="card-head"><div><h3 id="day-editor-title">Edit day</h3><p>This only updates the calendar</p></div></div>
+          <div class="form-grid">
+            <label>Earned ($)<input type="number" id="input-day-earned" min="0"></label>
+            <label>Shifts
+              <select id="input-day-shifts">
+                <option value="0">0 — day off</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+              </select>
+            </label>
+          </div>
+          <div class="settings-actions">
+            <button class="btn-primary" id="save-day-btn">Save</button>
+            <button class="btn-primary" id="clear-day-btn">Clear</button>
+            <span class="save-status" id="day-status"></span>
           </div>
         </div>
       </section>

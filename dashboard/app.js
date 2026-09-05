@@ -33,6 +33,9 @@ const DEFAULT_STATE = {
   tipsRatio: 0.41,
   offerRatio: 0.30,
   openRatio: 0.63,
+
+  // Monthly earnings calendar: "YYYY-MM-DD" -> { earned, shifts }
+  monthlyData: {},
 };
 
 function loadState() {
@@ -50,6 +53,7 @@ function saveState(state) {
 }
 
 let state = loadState();
+seedMonthlyDataIfEmpty();
 
 function money(n) {
   return "$" + Number(n || 0).toLocaleString("en-US");
@@ -88,6 +92,15 @@ function fmtClock(ts) {
 
 function fmtClockHour(ts) {
   return new Date(ts).toLocaleTimeString("en-US", { hour: "numeric" });
+}
+
+function dateKey(y, m, d) {
+  return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+function todayKey() {
+  const d = new Date();
+  return dateKey(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
 /* ---------------- RENDER ---------------- */
@@ -221,10 +234,17 @@ function applyEarnedShift(earnedShift, shiftLengthHours) {
     earnedShift, messagesShift, ppvShift, avgCheck,
     paidMonth, processing, pending, tipsRatio, offerRatio, openRatio,
   };
+
+  // keep today's cell on the monthly calendar in sync with this shift
+  const key = todayKey();
+  const existingShifts = state.monthlyData[key] ? state.monthlyData[key].shifts : 0;
+  state.monthlyData = { ...state.monthlyData, [key]: { earned: earnedShift, shifts: Math.max(1, existingShifts) } };
+
   saveState(state);
   renderState();
   fillSettingsForm();
   rebuildCharts();
+  renderMonthly();
 }
 
 document.getElementById("apply-earned-btn").addEventListener("click", () => {
@@ -263,6 +283,7 @@ const titles = {
   chats: ["My Chats", "Chats from this shift"],
   stats: ["Statistics", "Breakdown of earnings and conversion this shift"],
   payouts: ["Payouts", "Your earnings and payout history"],
+  monthly: ["Monthly", "Every day this month — click one to log it"],
   settings: ["Settings", "Profile and notifications"],
 };
 
@@ -278,6 +299,7 @@ function switchView(view) {
   document.getElementById("view-subtitle").textContent = subtitle;
   // charts rebuilt while their tab was hidden measure a 0×0 canvas — force a resize now that it's visible
   [revenueChart, dailyChart, splitChart].forEach(c => c && c.resize());
+  if (view === "monthly") renderMonthly();
 }
 
 document.querySelectorAll(".chip").forEach(chip => {
@@ -586,3 +608,146 @@ document.getElementById("payouts-body").innerHTML = randomPayouts(7).map((p, i) 
     <td>${p.date}</td>
   </tr>
 `).join("");
+
+/* ---------------- MONTHLY EARNINGS CALENDAR ---------------- */
+
+/* First time ever loading: back-fill the current month up to today with plausible
+   demo data so the calendar isn't empty, then leave it alone (never overwrite real edits). */
+function seedMonthlyDataIfEmpty() {
+  if (Object.keys(state.monthlyData).length > 0) return;
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth(), today = now.getDate();
+  const data = {};
+  for (let day = 1; day < today; day++) {
+    if (Math.random() < 0.15) {
+      data[dateKey(y, m, day)] = { earned: 0, shifts: 0 };
+    } else {
+      const shifts = Math.random() < 0.25 ? 2 : 1;
+      const earned = Math.round((120 + Math.random() * 160) * shifts * (0.7 + Math.random() * 0.3));
+      data[dateKey(y, m, day)] = { earned, shifts };
+    }
+  }
+  // today matches whatever "Earned this shift" already is, so Overview and the calendar agree
+  data[dateKey(y, m, today)] = { earned: state.earnedShift, shifts: 1 };
+  state.monthlyData = data;
+  saveState(state);
+}
+
+let monthOffset = 0; // 0 = current real month, negative = past months
+
+function renderMonthly() {
+  const base = new Date();
+  base.setDate(1);
+  base.setMonth(base.getMonth() + monthOffset);
+  const y = base.getFullYear(), m = base.getMonth();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const firstDow = new Date(y, m, 1).getDay(); // 0=Sun..6=Sat
+  const leadingBlanks = (firstDow + 6) % 7; // Monday-first offset
+
+  document.getElementById("month-label").textContent = base.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  document.getElementById("month-next").disabled = monthOffset >= 0;
+
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === y && today.getMonth() === m;
+
+  const records = [];
+  for (let day = 1; day <= daysInMonth; day++) {
+    records.push({ day, key: dateKey(y, m, day), rec: state.monthlyData[dateKey(y, m, day)] });
+  }
+  const maxEarned = Math.max(1, ...records.map(r => (r.rec && r.rec.shifts > 0) ? r.rec.earned : 0));
+
+  let totalEarned = 0, totalShifts = 0, daysWorked = 0, daysOff = 0, best = null;
+
+  let html = "";
+  for (let i = 0; i < leadingBlanks; i++) html += `<div class="cal-cell empty"></div>`;
+
+  records.forEach(({ day, key, rec }) => {
+    const cellDate = new Date(y, m, day);
+    const isToday = isCurrentMonth && day === today.getDate();
+    const isFuture = cellDate > today && !isToday;
+    let cls = "cal-cell";
+    if (isToday) cls += " today";
+
+    let inner = `<span class="cal-date">${day}</span>`;
+
+    if (rec && rec.shifts > 0) {
+      totalEarned += rec.earned;
+      totalShifts += rec.shifts;
+      daysWorked++;
+      if (best === null || rec.earned > best.earned) best = { day, earned: rec.earned };
+      const tier = rec.earned > maxEarned * 0.66 ? 3 : rec.earned > maxEarned * 0.33 ? 2 : 1;
+      cls += ` green green-${tier}`;
+      inner += `<span class="cal-amt">$${rec.earned}</span><span class="cal-shifts">${rec.shifts} sh</span>`;
+    } else if (rec && rec.shifts === 0) {
+      daysOff++;
+      cls += " off";
+      inner += `<span class="cal-amt">off</span>`;
+    } else if (isFuture) {
+      cls += " future";
+      inner += `<span class="cal-amt">—</span>`;
+    } else {
+      cls += " off";
+      inner += `<span class="cal-amt">—</span>`;
+    }
+
+    html += `<button type="button" class="${cls}" data-date="${key}">${inner}</button>`;
+  });
+
+  document.getElementById("cal-grid").innerHTML = html;
+  document.querySelectorAll(".cal-cell[data-date]").forEach(cell => {
+    cell.addEventListener("click", () => openDayEditor(cell.dataset.date));
+  });
+
+  document.getElementById("kpi-month-earned").textContent = money(totalEarned);
+  document.getElementById("kpi-month-earned-sub").textContent = `${totalShifts} shift${totalShifts === 1 ? "" : "s"}`;
+  document.getElementById("kpi-month-worked").textContent = `${daysWorked} / ${daysInMonth}`;
+  document.getElementById("kpi-month-off").textContent = `${daysOff} day${daysOff === 1 ? "" : "s"} off`;
+  document.getElementById("kpi-month-avg").textContent = totalShifts ? money(Math.round(totalEarned / totalShifts)) : "$0";
+  document.getElementById("kpi-month-avgday").textContent = daysWorked ? money(Math.round(totalEarned / daysWorked)) : "$0";
+  document.getElementById("kpi-month-best").textContent = best ? money(best.earned) : "$0";
+  document.getElementById("kpi-month-best-sub").textContent = best
+    ? base.toLocaleDateString("en-US", { month: "short" }) + " " + best.day
+    : "—";
+}
+
+let editingDateKey = null;
+
+function openDayEditor(key) {
+  editingDateKey = key;
+  const rec = state.monthlyData[key] || { earned: 0, shifts: 1 };
+  const [y, m, d] = key.split("-").map(Number);
+  const label = new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  document.getElementById("day-editor-title").textContent = label;
+  document.getElementById("input-day-earned").value = rec.earned;
+  document.getElementById("input-day-shifts").value = rec.shifts;
+  const card = document.getElementById("day-editor-card");
+  card.hidden = false;
+  card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+document.getElementById("save-day-btn").addEventListener("click", () => {
+  if (!editingDateKey) return;
+  const shifts = Number(document.getElementById("input-day-shifts").value) || 0;
+  const earned = shifts > 0 ? Math.max(0, Number(document.getElementById("input-day-earned").value) || 0) : 0;
+  state.monthlyData = { ...state.monthlyData, [editingDateKey]: { earned, shifts } };
+  saveState(state);
+  renderMonthly();
+  flashStatus("day-status", "Saved ✓");
+});
+
+document.getElementById("clear-day-btn").addEventListener("click", () => {
+  if (!editingDateKey) return;
+  const data = { ...state.monthlyData };
+  delete data[editingDateKey];
+  state.monthlyData = data;
+  saveState(state);
+  renderMonthly();
+  document.getElementById("day-editor-card").hidden = true;
+  editingDateKey = null;
+});
+
+document.getElementById("month-prev").addEventListener("click", () => { monthOffset--; renderMonthly(); });
+document.getElementById("month-next").addEventListener("click", () => { monthOffset = Math.min(0, monthOffset + 1); renderMonthly(); });
+document.getElementById("month-today").addEventListener("click", () => { monthOffset = 0; renderMonthly(); });
+
+renderMonthly();
