@@ -153,8 +153,8 @@
           <div class="card">
             <div class="card-head">
               <div>
-                <h3>My Models Today</h3>
-                <p>Who I'm chatting with this shift</p>
+                <h3>My Models</h3>
+                <p>This week's earnings, by model — edit in Settings</p>
               </div>
             </div>
             <div class="table-wrap">
@@ -492,6 +492,19 @@
             <span class="save-status" id="apply-status"></span>
           </div>
           <p class="derived-preview" id="derived-preview">Derived: 94 messages · 5 PPV sold · $34 avg sale</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Models</h3><p>Set the number of models and their combined weekly earnings — the per-model breakdown recalculates itself</p></div></div>
+          <div class="form-grid">
+            <label>Number of models<input type="number" id="input-models-count" min="1" max="8"></label>
+            <label>Earned this week, combined ($)<input type="number" id="input-models-weekly" min="0"></label>
+          </div>
+          <div class="settings-actions">
+            <button class="btn-primary" id="apply-models-btn">Apply</button>
+            <span class="save-status" id="apply-models-status"></span>
+          </div>
+          <p class="derived-preview" id="models-derived-preview">Derived: Kira Storm $92 · Aria Vale $54 · Nova Sky $40</p>
         </div>
 
         <div class="card">

@@ -4,6 +4,9 @@ function initials(name) {
   return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 }
 
+const MODEL_NAME_POOL = ["Kira Storm", "Aria Vale", "Nova Sky", "Luna Rae", "Mia Chase", "Zoe Blake", "Ivy Rose", "Skye Ellis"];
+const MODEL_PLATFORMS = ["OnlyFans", "Fansly", "OnlyFans / Fansly"];
+
 /* ---------------- EDITABLE STATE (persisted to localStorage) ---------------- */
 const STORAGE_KEY = "chatterDashboardState";
 
@@ -41,6 +44,12 @@ const DEFAULT_STATE = {
   scoutRate: 13, // %
   scoutedModels: [], // { id, name, platform, dateScouted, monthlyEarnings, active }
 
+  // Models you personally chat for — only count + weekly total are editable,
+  // the per-model breakdown (modelsList) is always derived from those two.
+  modelsCount: 3,
+  modelsWeeklyEarned: 1240,
+  modelsList: [], // { name, platform, messages, earned }
+
   theme: "dark", // "dark" | "light"
 };
 
@@ -61,6 +70,7 @@ function saveState(state) {
 let state = loadState();
 seedMonthlyDataIfEmpty();
 seedScoutingDataIfEmpty();
+seedModelsIfEmpty();
 
 /* ---------------- THEME ---------------- */
 function applyTheme() {
@@ -208,6 +218,9 @@ function fillSettingsForm() {
 
   document.getElementById("input-range-min").value = state.rangeMin;
   document.getElementById("input-range-max").value = state.rangeMax;
+
+  document.getElementById("input-models-count").value = state.modelsCount;
+  document.getElementById("input-models-weekly").value = state.modelsWeeklyEarned;
 
   updateDerivedPreview();
 }
@@ -512,32 +525,71 @@ function rebuildCharts() {
 
 rebuildCharts();
 
-/* ---------------- DATA: MY MODELS TODAY ---------------- */
-const myModels = [
-  { name: "Kira Storm", platform: "OnlyFans", msgs: 210, earned: 92 },
-  { name: "Aria Vale", platform: "OnlyFans / Fansly", msgs: 89, earned: 54 },
-  { name: "Nova Sky", platform: "OnlyFans", msgs: 43, earned: 40 },
-];
+/* ---------------- MODELS: count + weekly total drive the whole breakdown ---------------- */
+function deriveModelsList(count, weeklyEarned) {
+  const n = Math.min(MODEL_NAME_POOL.length, Math.max(1, count));
+  const raws = Array.from({ length: n }, () => 0.5 + Math.random());
+  const sumRaw = raws.reduce((a, b) => a + b, 0);
+  const earnings = raws.map(r => Math.round(weeklyEarned * (r / sumRaw)));
+  const diff = weeklyEarned - earnings.reduce((a, b) => a + b, 0);
+  if (earnings.length) earnings[earnings.length - 1] += diff;
 
-document.getElementById("my-models-body").innerHTML = myModels.map(m => `
-  <tr>
-    <td>${m.name}</td>
-    <td>${m.platform}</td>
-    <td>${m.msgs}</td>
-    <td><b>$${m.earned}</b></td>
-  </tr>
-`).join("");
+  return MODEL_NAME_POOL.slice(0, n).map((name, i) => ({
+    name,
+    platform: MODEL_PLATFORMS[i % MODEL_PLATFORMS.length],
+    earned: earnings[i],
+    messages: Math.max(15, Math.round(earnings[i] * (1.2 + Math.random()))),
+  }));
+}
+
+function seedModelsIfEmpty() {
+  if (state.modelsList.length > 0) return;
+  state.modelsList = deriveModelsList(state.modelsCount, state.modelsWeeklyEarned);
+  saveState(state);
+}
+
+function applyModelsSettings(count, weeklyEarned) {
+  const n = Math.min(MODEL_NAME_POOL.length, Math.max(1, count));
+  state.modelsCount = n;
+  state.modelsWeeklyEarned = weeklyEarned;
+  state.modelsList = deriveModelsList(n, weeklyEarned);
+  saveState(state);
+  renderModelsTable();
+  fillSettingsForm();
+}
+
+function renderModelsTable() {
+  document.getElementById("my-models-body").innerHTML = state.modelsList.map(m => `
+    <tr>
+      <td>${m.name}</td>
+      <td>${m.platform}</td>
+      <td>${m.messages}</td>
+      <td><b>$${m.earned}</b></td>
+    </tr>
+  `).join("") || `<tr><td colspan="4" class="table-empty">No models yet — add some in Settings.</td></tr>`;
+
+  document.getElementById("models-derived-preview").textContent =
+    "Derived: " + state.modelsList.map(m => `${m.name} $${m.earned}`).join(" · ");
+}
+
+document.getElementById("apply-models-btn").addEventListener("click", () => {
+  const count = Math.max(1, Number(document.getElementById("input-models-count").value) || 1);
+  const weeklyEarned = Math.max(0, Number(document.getElementById("input-models-weekly").value) || 0);
+  applyModelsSettings(count, weeklyEarned);
+  flashStatus("apply-models-status", "Applied ✓");
+});
+
+renderModelsTable();
 
 /* ---------------- DATA: RECENT EARNINGS FEED ---------------- */
 const feedUsers = ["mike_92", "daniel.k", "shadow_x", "alex_vip", "johnny88", "kevin_b", "brandon99"];
-const feedModels = ["Kira Storm", "Aria Vale", "Nova Sky"];
 
 function randomFeed(n) {
   const rows = [];
   for (let i = 0; i < n; i++) {
     const isTip = Math.random() > 0.45;
     const user = feedUsers[Math.floor(Math.random() * feedUsers.length)];
-    const model = feedModels[Math.floor(Math.random() * feedModels.length)];
+    const model = state.modelsList[Math.floor(Math.random() * state.modelsList.length)].name;
     const amount = isTip ? Math.floor(Math.random() * 60) + 10 : Math.floor(Math.random() * 90) + 20;
     rows.push({
       text: `${isTip ? "Tip" : "PPV purchased"} · @${user} · ${model}`,
@@ -574,7 +626,7 @@ const chatNames = ["mike_92", "daniel.k", "shadow_x", "peterR", "alex_vip", "joh
 function randomChats(n) {
   const rows = [];
   for (let i = 0; i < n; i++) {
-    const model = myModels[Math.floor(Math.random() * myModels.length)];
+    const model = state.modelsList[Math.floor(Math.random() * state.modelsList.length)];
     const online = Math.random() > 0.35;
     const unread = Math.random() > 0.5 ? Math.floor(Math.random() * 5) + 1 : 0;
     const mins = Math.floor(Math.random() * 58) + 1;
