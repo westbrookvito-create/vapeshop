@@ -40,6 +40,8 @@ const DEFAULT_STATE = {
   // Scouting: passive income from models you brought to the agency
   scoutRate: 13, // %
   scoutedModels: [], // { id, name, platform, dateScouted, monthlyEarnings, active }
+
+  theme: "dark", // "dark" | "light"
 };
 
 function loadState() {
@@ -59,6 +61,27 @@ function saveState(state) {
 let state = loadState();
 seedMonthlyDataIfEmpty();
 seedScoutingDataIfEmpty();
+
+/* ---------------- THEME ---------------- */
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", state.theme);
+  document.querySelectorAll("#theme-switch .chip").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.themeChoice === state.theme);
+  });
+}
+applyTheme();
+
+document.querySelectorAll("#theme-switch .chip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (state.theme === btn.dataset.themeChoice) return;
+    state.theme = btn.dataset.themeChoice;
+    saveState(state);
+    applyTheme();
+    applyChartDefaults();
+    rebuildCharts();
+    buildScoutingChart();
+  });
+});
 
 function money(n) {
   return "$" + Number(n || 0).toLocaleString("en-US");
@@ -319,11 +342,32 @@ document.querySelectorAll(".chip").forEach(chip => {
 /* ---------------- CHART.JS DEFAULTS ---------------- */
 Chart.defaults.font.family = "-apple-system, 'Segoe UI', Roboto, sans-serif";
 Chart.defaults.font.size = 11;
-Chart.defaults.color = "#5c6274";
-Chart.defaults.borderColor = "#1a1e29";
 
 const GREEN = "#22c55e";
 const RED = "#ef4444";
+
+function chartTheme() {
+  return state.theme === "light"
+    ? {
+        text: "#5b6172", borderSoft: "#e7e9ee", grid: "#eceef2",
+        tooltipBg: "#ffffff", tooltipBorder: "#e1e3e9",
+        tooltipTitle: "#16181d", tooltipBody: "#5b6172",
+        donutBorder: "#ffffff",
+      }
+    : {
+        text: "#5c6274", borderSoft: "#1a1e29", grid: "#161a24",
+        tooltipBg: "#181c26", tooltipBorder: "#232838",
+        tooltipTitle: "#dfe2ea", tooltipBody: "#8a90a3",
+        donutBorder: "#12151d",
+      };
+}
+
+function applyChartDefaults() {
+  const ct = chartTheme();
+  Chart.defaults.color = ct.text;
+  Chart.defaults.borderColor = ct.borderSoft;
+}
+applyChartDefaults();
 
 /* ---------------- CHART DATA: hour-by-hour across the completed shift ---------------- */
 
@@ -350,6 +394,7 @@ let splitChart = null;
 let scoutingChart = null;
 
 function buildRevenueChart(labels, totals) {
+  const ct = chartTheme();
   if (revenueChart) revenueChart.destroy();
   revenueChart = new Chart(document.getElementById("chart-revenue").getContext("2d"), {
     type: "line",
@@ -387,20 +432,21 @@ function buildRevenueChart(labels, totals) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
-          padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
+          backgroundColor: ct.tooltipBg, borderColor: ct.tooltipBorder, borderWidth: 1,
+          padding: 8, titleColor: ct.tooltipTitle, bodyColor: ct.tooltipBody,
           callbacks: { label: (ctx) => "  $" + ctx.parsed.y }
         }
       },
       scales: {
         x: { grid: { display: false } },
-        y: { grid: { color: "#161a24" }, ticks: { callback: v => "$" + v } }
+        y: { grid: { color: ct.grid }, ticks: { callback: v => "$" + v } }
       }
     }
   });
 }
 
 function buildDailyChart(labels, totals) {
+  const ct = chartTheme();
   const tipsData = totals.map(t => (t == null ? null : Math.round(t * state.tipsRatio)));
   const ppvData = totals.map((t, i) => (t == null ? null : t - tipsData[i]));
 
@@ -419,19 +465,20 @@ function buildDailyChart(labels, totals) {
       maintainAspectRatio: false,
       animation: false,
       plugins: { legend: { display: false }, tooltip: {
-        backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
-        padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
+        backgroundColor: ct.tooltipBg, borderColor: ct.tooltipBorder, borderWidth: 1,
+        padding: 8, titleColor: ct.tooltipTitle, bodyColor: ct.tooltipBody,
         callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y}` }
       }},
       scales: {
         x: { grid: { display: false } },
-        y: { grid: { color: "#161a24" }, ticks: { callback: v => "$" + v } }
+        y: { grid: { color: ct.grid }, ticks: { callback: v => "$" + v } }
       }
     }
   });
 }
 
 function buildSplitChart() {
+  const ct = chartTheme();
   const tipsPct = Math.round(state.tipsRatio * 100);
   const ppvPct = 100 - tipsPct;
 
@@ -440,7 +487,7 @@ function buildSplitChart() {
     type: "doughnut",
     data: {
       labels: ["Tips", "PPV"],
-      datasets: [{ data: [tipsPct, ppvPct], backgroundColor: [GREEN, RED], borderColor: "#12151d", borderWidth: 3 }]
+      datasets: [{ data: [tipsPct, ppvPct], backgroundColor: [GREEN, RED], borderColor: ct.donutBorder, borderWidth: 3 }]
     },
     options: {
       responsive: true,
@@ -448,8 +495,8 @@ function buildSplitChart() {
       animation: false,
       cutout: "70%",
       plugins: { legend: { display: false }, tooltip: {
-        backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
-        padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
+        backgroundColor: ct.tooltipBg, borderColor: ct.tooltipBorder, borderWidth: 1,
+        padding: 8, titleColor: ct.tooltipTitle, bodyColor: ct.tooltipBody,
       }}
     }
   });
@@ -841,6 +888,7 @@ function renderScouting() {
 }
 
 function buildScoutingChart() {
+  const ct = chartTheme();
   const months = 6;
   const active = state.scoutedModels.filter(m => m.active);
   const currentTotal = active.reduce((sum, m) => sum + scoutCut(m), 0);
@@ -885,14 +933,14 @@ function buildScoutingChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
-          padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
+          backgroundColor: ct.tooltipBg, borderColor: ct.tooltipBorder, borderWidth: 1,
+          padding: 8, titleColor: ct.tooltipTitle, bodyColor: ct.tooltipBody,
           callbacks: { label: ctx => "  $" + ctx.parsed.y }
         }
       },
       scales: {
         x: { grid: { display: false } },
-        y: { grid: { color: "#161a24" }, ticks: { callback: v => "$" + v } }
+        y: { grid: { color: ct.grid }, ticks: { callback: v => "$" + v } }
       }
     }
   });
