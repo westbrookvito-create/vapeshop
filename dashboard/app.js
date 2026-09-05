@@ -36,6 +36,10 @@ const DEFAULT_STATE = {
 
   // Monthly earnings calendar: "YYYY-MM-DD" -> { earned, shifts }
   monthlyData: {},
+
+  // Scouting: passive income from models you brought to the agency
+  scoutRate: 13, // %
+  scoutedModels: [], // { id, name, platform, dateScouted, monthlyEarnings, active }
 };
 
 function loadState() {
@@ -54,6 +58,7 @@ function saveState(state) {
 
 let state = loadState();
 seedMonthlyDataIfEmpty();
+seedScoutingDataIfEmpty();
 
 function money(n) {
   return "$" + Number(n || 0).toLocaleString("en-US");
@@ -284,6 +289,7 @@ const titles = {
   stats: ["Statistics", "Breakdown of earnings and conversion this shift"],
   payouts: ["Payouts", "Your earnings and payout history"],
   monthly: ["Monthly", "Every day this month — click one to log it"],
+  scouting: ["Scouting", "Passive income from models you brought to the agency"],
   settings: ["Settings", "Profile and notifications"],
 };
 
@@ -298,8 +304,9 @@ function switchView(view) {
   document.getElementById("view-title").textContent = title;
   document.getElementById("view-subtitle").textContent = subtitle;
   // charts rebuilt while their tab was hidden measure a 0×0 canvas — force a resize now that it's visible
-  [revenueChart, dailyChart, splitChart].forEach(c => c && c.resize());
+  [revenueChart, dailyChart, splitChart, scoutingChart].forEach(c => c && c.resize());
   if (view === "monthly") renderMonthly();
+  if (view === "scouting") renderScouting();
 }
 
 document.querySelectorAll(".chip").forEach(chip => {
@@ -340,6 +347,7 @@ function buildHourLabels() {
 let revenueChart = null;
 let dailyChart = null;
 let splitChart = null;
+let scoutingChart = null;
 
 function buildRevenueChart(labels, totals) {
   if (revenueChart) revenueChart.destroy();
@@ -751,3 +759,169 @@ document.getElementById("month-next").addEventListener("click", () => { monthOff
 document.getElementById("month-today").addEventListener("click", () => { monthOffset = 0; renderMonthly(); });
 
 renderMonthly();
+
+/* ---------------- SCOUTING: passive income from models you brought in ---------------- */
+
+function isoDateMinusMonths(months) {
+  const d = new Date();
+  d.setMonth(d.getMonth() - months);
+  return d.toISOString().slice(0, 10);
+}
+
+function seedScoutingDataIfEmpty() {
+  if (state.scoutedModels.length > 0) return;
+  state.scoutedModels = [
+    { id: 1, name: "Lily Monroe", platform: "OnlyFans", dateScouted: isoDateMinusMonths(8), monthlyEarnings: 9200, active: true },
+    { id: 2, name: "Ava Sinclair", platform: "OnlyFans / Fansly", dateScouted: isoDateMinusMonths(5), monthlyEarnings: 5400, active: true },
+    { id: 3, name: "Ruby Chase", platform: "Fansly", dateScouted: isoDateMinusMonths(3), monthlyEarnings: 2600, active: true },
+    { id: 4, name: "Nadia Frost", platform: "OnlyFans", dateScouted: isoDateMinusMonths(11), monthlyEarnings: 3100, active: false },
+  ];
+  saveState(state);
+}
+
+function scoutCut(model) {
+  return Math.round(model.monthlyEarnings * (state.scoutRate / 100));
+}
+
+function monthsSince(dateStr) {
+  const then = new Date(dateStr);
+  const now = new Date();
+  return Math.max(1, (now.getFullYear() - then.getFullYear()) * 12 + (now.getMonth() - then.getMonth()) + 1);
+}
+
+function renderScouting() {
+  const models = state.scoutedModels;
+  const active = models.filter(m => m.active);
+  const monthPassive = active.reduce((sum, m) => sum + scoutCut(m), 0);
+  const grossMonthly = active.reduce((sum, m) => sum + m.monthlyEarnings, 0);
+  // rough lifetime estimate: each model's current monthly cut × months scouted (a simplification, not a real ledger)
+  const lifetime = models.reduce((sum, m) => sum + scoutCut(m) * monthsSince(m.dateScouted), 0);
+
+  document.getElementById("kpi-scout-count").textContent = models.length;
+  document.getElementById("kpi-scout-active").textContent = `${active.length} active`;
+  document.getElementById("kpi-scout-month").textContent = money(monthPassive);
+  document.getElementById("kpi-scout-rate-sub").textContent = `at ${state.scoutRate}% of earnings`;
+  document.getElementById("kpi-scout-lifetime").textContent = money(lifetime);
+  document.getElementById("kpi-scout-gross").textContent = money(grossMonthly);
+  document.getElementById("kpi-scout-avg").textContent = active.length ? money(Math.round(monthPassive / active.length)) : "$0";
+
+  document.getElementById("scouting-body").innerHTML = models.map(m => `
+    <tr>
+      <td>${m.name}</td>
+      <td>${m.platform}</td>
+      <td>${m.dateScouted}</td>
+      <td>${money(m.monthlyEarnings)}</td>
+      <td><b class="${m.active ? "" : "dimmed"}">${money(scoutCut(m))}</b></td>
+      <td><span class="badge ${m.active ? "paid" : "offline"}">${m.active ? "Active" : "Inactive"}</span></td>
+      <td class="table-actions">
+        <button type="button" class="link-btn" data-scout-toggle="${m.id}">${m.active ? "Deactivate" : "Reactivate"}</button>
+        <button type="button" class="link-btn" data-scout-remove="${m.id}">Remove</button>
+      </td>
+    </tr>
+  `).join("") || `<tr><td colspan="7" class="table-empty">No models scouted yet — add one above.</td></tr>`;
+
+  document.querySelectorAll("[data-scout-toggle]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = Number(btn.dataset.scoutToggle);
+      state.scoutedModels = state.scoutedModels.map(m => m.id === id ? { ...m, active: !m.active } : m);
+      saveState(state);
+      renderScouting();
+      buildScoutingChart();
+    });
+  });
+  document.querySelectorAll("[data-scout-remove]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = Number(btn.dataset.scoutRemove);
+      state.scoutedModels = state.scoutedModels.filter(m => m.id !== id);
+      saveState(state);
+      renderScouting();
+      buildScoutingChart();
+    });
+  });
+}
+
+function buildScoutingChart() {
+  const months = 6;
+  const active = state.scoutedModels.filter(m => m.active);
+  const currentTotal = active.reduce((sum, m) => sum + scoutCut(m), 0);
+  const labels = [];
+  const data = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    labels.push(d.toLocaleDateString("en-US", { month: "short" }));
+    // fewer models were scouted the further back you go, so ramp up toward the current total
+    const rampedModels = active.filter(m => monthsSince(m.dateScouted) >= i + 1);
+    const total = rampedModels.reduce((sum, m) => sum + scoutCut(m), 0);
+    data.push(i === 0 ? currentTotal : Math.round(total * (0.85 + Math.random() * 0.3)));
+  }
+
+  if (scoutingChart) scoutingChart.destroy();
+  scoutingChart = new Chart(document.getElementById("chart-scouting").getContext("2d"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderWidth: 2,
+        pointRadius: 2.5,
+        pointBorderWidth: 0,
+        pointHoverRadius: 5,
+        pointHoverBorderWidth: 0,
+        tension: 0,
+        fill: false,
+        pointBackgroundColor: ctx => {
+          const i = ctx.dataIndex;
+          if (i === 0) return GREEN;
+          return data[i] >= data[i - 1] ? GREEN : RED;
+        },
+        segment: { borderColor: ctx => ctx.p0.parsed.y <= ctx.p1.parsed.y ? GREEN : RED },
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#181c26", borderColor: "#232838", borderWidth: 1,
+          padding: 8, titleColor: "#dfe2ea", bodyColor: "#8a90a3",
+          callbacks: { label: ctx => "  $" + ctx.parsed.y }
+        }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: "#161a24" }, ticks: { callback: v => "$" + v } }
+      }
+    }
+  });
+}
+
+document.getElementById("add-scout-btn").addEventListener("click", () => {
+  const name = document.getElementById("input-scout-name").value.trim();
+  const platform = document.getElementById("input-scout-platform").value;
+  const dateScouted = document.getElementById("input-scout-date").value || new Date().toISOString().slice(0, 10);
+  const monthlyEarnings = Math.max(0, Number(document.getElementById("input-scout-earnings").value) || 0);
+
+  if (!name) {
+    flashStatus("add-scout-status", "Enter a name first");
+    return;
+  }
+
+  const nextId = state.scoutedModels.reduce((max, m) => Math.max(max, m.id), 0) + 1;
+  state.scoutedModels = [...state.scoutedModels, { id: nextId, name, platform, dateScouted, monthlyEarnings, active: true }];
+  saveState(state);
+
+  document.getElementById("input-scout-name").value = "";
+  document.getElementById("input-scout-earnings").value = "";
+
+  renderScouting();
+  buildScoutingChart();
+  flashStatus("add-scout-status", "Added ✓");
+});
+
+document.getElementById("input-scout-date").value = new Date().toISOString().slice(0, 10);
+
+renderScouting();
+buildScoutingChart();
