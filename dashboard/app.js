@@ -371,13 +371,13 @@ function chartTheme() {
         text: "#5b6172", borderSoft: "#e7e9ee", grid: "#eceef2",
         tooltipBg: "#ffffff", tooltipBorder: "#e1e3e9",
         tooltipTitle: "#16181d", tooltipBody: "#5b6172",
-        donutBorder: "#ffffff",
+        donutBorder: "#ffffff", accent: "#2563eb",
       }
     : {
         text: "#5c6274", borderSoft: "#1a1e29", grid: "#161a24",
         tooltipBg: "#181c26", tooltipBorder: "#232838",
         tooltipTitle: "#dfe2ea", tooltipBody: "#8a90a3",
-        donutBorder: "#12151d",
+        donutBorder: "#12151d", accent: "#3b82f6",
       };
 }
 
@@ -872,6 +872,36 @@ function yearMonthKey(y, m) {
   return `${y}-${String(m + 1).padStart(2, "0")}`;
 }
 
+/* Deterministic 0..1 "random" per day, so the daily bars don't jitter on every re-render. */
+function seededDayFactor(y, m, day) {
+  const seed = y * 10000 + (m + 1) * 100 + day;
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/* Splits each tracked month's total into one bar per day, so the yearly chart reads
+   like a real analytics graph (many thin daily bars) instead of one point per month. */
+function buildYearlyDailyBars(year, months) {
+  const now = new Date();
+  const days = [];
+  for (let m = 0; m < 12; m++) {
+    const mo = months[m];
+    const daysInMonth = new Date(year, m + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, m, d);
+      const isFuture = date > now;
+      let value = null;
+      if (typeof mo.value === "number" && !isFuture) {
+        const avg = mo.value / daysInMonth;
+        const factor = 0.3 + seededDayFactor(year, m, d) * 1.4;
+        value = Math.max(0, Math.round(avg * factor));
+      }
+      days.push({ date, value, isFirstOfMonth: d === 1, monthIndex: m });
+    }
+  }
+  return days;
+}
+
 /* Seeds the current year (up to the current real month) with a "nothing, nothing,
    nothing... then it takes off" curve, like a channel that suddenly blows up. */
 function seedYearlyDataIfEmpty() {
@@ -951,33 +981,22 @@ function renderYearly() {
     cell.addEventListener("click", () => openMonthEditor(cell.dataset.month));
   });
 
-  // chart: null for months with no data so the line just doesn't draw there yet
-  const chartData = months.map(mo => (typeof mo.value === "number" ? mo.value : null));
-  const labels = YEAR_MONTH_LABELS;
+  // one bar per day of the year, so the chart reads like a real analytics graph
+  const dayData = buildYearlyDailyBars(year, months);
+  const chartValues = dayData.map(d => d.value);
+  const chartLabels = dayData.map(d => (d.isFirstOfMonth ? YEAR_MONTH_LABELS[d.monthIndex] : ""));
 
   if (yearlyChart) yearlyChart.destroy();
   yearlyChart = new Chart(document.getElementById("chart-yearly").getContext("2d"), {
-    type: "line",
+    type: "bar",
     data: {
-      labels,
+      labels: chartLabels,
       datasets: [{
-        data: chartData,
-        borderWidth: 2.5,
-        pointRadius: 3,
-        pointBorderWidth: 0,
-        pointHoverRadius: 5,
-        pointHoverBorderWidth: 0,
-        tension: 0,
-        fill: false,
-        spanGaps: false,
-        pointBackgroundColor: ctx => {
-          const i = ctx.dataIndex;
-          if (i === 0 || chartData[i - 1] == null) return GREEN;
-          return chartData[i] >= chartData[i - 1] ? GREEN : RED;
-        },
-        segment: {
-          borderColor: ctx => ctx.p0.parsed.y <= ctx.p1.parsed.y ? GREEN : RED,
-        },
+        data: chartValues,
+        backgroundColor: ct.accent,
+        borderRadius: 1,
+        barPercentage: 1,
+        categoryPercentage: 0.85,
       }]
     },
     options: {
@@ -989,11 +1008,14 @@ function renderYearly() {
         tooltip: {
           backgroundColor: ct.tooltipBg, borderColor: ct.tooltipBorder, borderWidth: 1,
           padding: 8, titleColor: ct.tooltipTitle, bodyColor: ct.tooltipBody,
-          callbacks: { label: ctx => "  $" + ctx.parsed.y }
+          callbacks: {
+            title: ctx => dayData[ctx[0].dataIndex].date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+            label: ctx => (ctx.parsed.y == null ? "no data" : "$" + ctx.parsed.y),
+          }
         }
       },
       scales: {
-        x: { grid: { display: false } },
+        x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 0, color: ct.text } },
         y: { grid: { color: ct.grid }, ticks: { callback: v => "$" + v } }
       }
     }
