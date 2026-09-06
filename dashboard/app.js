@@ -918,10 +918,30 @@ function buildYearlyDailyBars(year, months) {
   return days;
 }
 
-/* Rebuilds every day from Jan 1 through today as a "nothing, nothing... then it takes off"
-   curve: mostly $0 or a couple bucks early on, then a curved ramp that lands exactly on
-   today's real "Earned this shift" value. Feeds the Monthly calendar directly, so Yearly's
-   per-month totals and daily bars update automatically once they're derived from it. */
+function smoothstep(t) {
+  return t * t * (3 - 2 * t);
+}
+
+/* Value (as a fraction of the target) at a given progress (0..1) through the ramp,
+   interpolated between hand-placed keyframes so the curve rises, dips, rises again,
+   and only commits to climbing near the end — not a straight or stepped ramp. */
+function rampKeyframeValue(progress, keyframes) {
+  for (let i = 0; i < keyframes.length - 1; i++) {
+    const [p0, v0] = keyframes[i];
+    const [p1, v1] = keyframes[i + 1];
+    if (progress <= p1) {
+      const local = p1 === p0 ? 1 : (progress - p0) / (p1 - p0);
+      return v0 + (v1 - v0) * smoothstep(Math.max(0, Math.min(1, local)));
+    }
+  }
+  return keyframes[keyframes.length - 1][1];
+}
+
+/* Rebuilds every day from Jan 1 through today as: small, a bit of growth, a dip back
+   down near the bottom, another small rise and dip, and only then a real, sustained
+   climb to today's actual "Earned this shift" value. Feeds the Monthly calendar
+   directly, so Yearly's per-month totals and daily bars update automatically once
+   they're derived from it. */
 function generateHockeyStickHistory(flatMin, flatMax) {
   const now = new Date();
   const year = now.getFullYear();
@@ -929,6 +949,18 @@ function generateHockeyStickHistory(flatMin, flatMax) {
   const totalDays = Math.round((now - jan1) / 86400000) + 1;
   const rampStart = Math.floor(totalDays * (0.3 + Math.random() * 0.15));
   const target = Math.max(20, state.earnedShift);
+
+  // [progress through the ramp, value as a fraction of target] — small growth, a dip
+  // to near the bottom, growth and a dip again, then a real, sustained climb
+  const keyframes = [
+    [0, 0.03],
+    [0.16, 0.10 * (0.8 + Math.random() * 0.4)],
+    [0.32, 0.025],
+    [0.5, 0.17 * (0.8 + Math.random() * 0.4)],
+    [0.64, 0.07],
+    [0.82, 0.45 * (0.8 + Math.random() * 0.4)],
+    [1, 1],
+  ];
 
   const generated = {};
   for (let i = 0; i < totalDays; i++) {
@@ -947,11 +979,11 @@ function generateHockeyStickHistory(flatMin, flatMax) {
         : { earned: randomInt(flatMin, flatMax), shifts: 1 };
     } else {
       const progress = (i - rampStart) / Math.max(1, totalDays - 1 - rampStart);
-      const curve = Math.pow(progress, 1.8);
+      const base = rampKeyframeValue(progress, keyframes) * target;
       if (Math.random() < 0.12) {
         generated[key] = { earned: 0, shifts: 0 };
       } else {
-        const earned = Math.max(0, Math.round(curve * target * (0.75 + Math.random() * 0.5)));
+        const earned = Math.max(0, Math.round(base * (0.8 + Math.random() * 0.4)));
         generated[key] = { earned, shifts: Math.random() < 0.15 ? 2 : 1 };
       }
     }
