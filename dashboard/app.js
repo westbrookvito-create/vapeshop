@@ -918,30 +918,26 @@ function buildYearlyDailyBars(year, months) {
   return days;
 }
 
-function smoothstep(t) {
-  return t * t * (3 - 2 * t);
-}
-
 /* Value (as a fraction of the target) at a given progress (0..1) through the ramp,
-   interpolated between hand-placed keyframes so the curve rises, dips, rises again,
-   and only commits to climbing near the end — not a straight or stepped ramp. */
+   LINEARLY interpolated between hand-placed keyframes — sharp corners at every
+   keyframe on purpose, so the trend itself zigzags instead of arcing smoothly. */
 function rampKeyframeValue(progress, keyframes) {
   for (let i = 0; i < keyframes.length - 1; i++) {
     const [p0, v0] = keyframes[i];
     const [p1, v1] = keyframes[i + 1];
     if (progress <= p1) {
       const local = p1 === p0 ? 1 : (progress - p0) / (p1 - p0);
-      return v0 + (v1 - v0) * smoothstep(Math.max(0, Math.min(1, local)));
+      return v0 + (v1 - v0) * Math.max(0, Math.min(1, local));
     }
   }
   return keyframes[keyframes.length - 1][1];
 }
 
-/* Rebuilds every day from Jan 1 through today as: small, a bit of growth, a dip back
-   down near the bottom, another small rise and dip, and only then a real, sustained
-   climb to today's actual "Earned this shift" value. Feeds the Monthly calendar
-   directly, so Yearly's per-month totals and daily bars update automatically once
-   they're derived from it. */
+/* Rebuilds every day from Jan 1 through today as a jagged, choppy ride: small, a
+   spike, a crash back down, more rises and drops, and only near the end a real,
+   sustained climb to today's actual "Earned this shift" value. Feeds the Monthly
+   calendar directly, so Yearly's per-month totals and daily bars update
+   automatically once they're derived from it. */
 function generateHockeyStickHistory(flatMin, flatMax) {
   const now = new Date();
   const year = now.getFullYear();
@@ -950,15 +946,21 @@ function generateHockeyStickHistory(flatMin, flatMax) {
   const rampStart = Math.floor(totalDays * (0.3 + Math.random() * 0.15));
   const target = Math.max(20, state.earnedShift);
 
-  // [progress through the ramp, value as a fraction of target] — small growth, a dip
-  // to near the bottom, growth and a dip again, then a real, sustained climb
+  // [progress through the ramp, value as a fraction of target] — lots of short,
+  // sharp rises and crashes, and only the last couple of keyframes really commit
   const keyframes = [
-    [0, 0.03],
-    [0.16, 0.10 * (0.8 + Math.random() * 0.4)],
-    [0.32, 0.025],
-    [0.5, 0.17 * (0.8 + Math.random() * 0.4)],
-    [0.64, 0.07],
-    [0.82, 0.45 * (0.8 + Math.random() * 0.4)],
+    [0, 0.02],
+    [0.09, 0.10 * (0.6 + Math.random() * 0.8)],
+    [0.16, 0.015],
+    [0.24, 0.16 * (0.6 + Math.random() * 0.8)],
+    [0.31, 0.02],
+    [0.40, 0.22 * (0.6 + Math.random() * 0.8)],
+    [0.47, 0.05],
+    [0.56, 0.32 * (0.6 + Math.random() * 0.8)],
+    [0.63, 0.10],
+    [0.73, 0.55 * (0.6 + Math.random() * 0.8)],
+    [0.80, 0.22],
+    [0.90, 0.8],
     [1, 1],
   ];
 
@@ -974,16 +976,21 @@ function generateHockeyStickHistory(flatMin, flatMax) {
     }
 
     if (i < rampStart) {
+      // occasional sharp $1-2 spike so the flat stretch isn't perfectly even either
+      const spike = Math.random() < 0.08 ? randomInt(flatMax, flatMax * 3) : 0;
       generated[key] = Math.random() < 0.4
         ? { earned: 0, shifts: 0 }
-        : { earned: randomInt(flatMin, flatMax), shifts: 1 };
+        : { earned: randomInt(flatMin, flatMax) + spike, shifts: 1 };
     } else {
       const progress = (i - rampStart) / Math.max(1, totalDays - 1 - rampStart);
       const base = rampKeyframeValue(progress, keyframes) * target;
-      if (Math.random() < 0.12) {
-        generated[key] = { earned: 0, shifts: 0 };
+      if (Math.random() < 0.14) {
+        generated[key] = { earned: 0, shifts: 0 }; // sharp crash to nothing
+      } else if (Math.random() < 0.08) {
+        const earned = Math.max(0, Math.round(base * (1.6 + Math.random() * 0.9))); // sudden spike day
+        generated[key] = { earned, shifts: Math.random() < 0.3 ? 2 : 1 };
       } else {
-        const earned = Math.max(0, Math.round(base * (0.8 + Math.random() * 0.4)));
+        const earned = Math.max(0, Math.round(base * (0.5 + Math.random() * 0.9)));
         generated[key] = { earned, shifts: Math.random() < 0.15 ? 2 : 1 };
       }
     }
