@@ -40,6 +40,9 @@ const DEFAULT_STATE = {
   // Monthly earnings calendar: "YYYY-MM-DD" -> { earned, shifts }
   monthlyData: {},
 
+  // Yearly earnings: "YYYY-MM" -> earned
+  yearlyData: {},
+
   // Scouting: passive income from models you brought to the agency
   scoutRate: 13, // %
   scoutedModels: [], // { id, name, platform, dateScouted, monthlyEarnings, active }
@@ -71,6 +74,7 @@ let state = loadState();
 seedMonthlyDataIfEmpty();
 seedScoutingDataIfEmpty();
 seedModelsIfEmpty();
+seedYearlyDataIfEmpty();
 
 /* ---------------- THEME ---------------- */
 function applyTheme() {
@@ -325,6 +329,7 @@ const titles = {
   stats: ["Statistics", "Breakdown of earnings and conversion this shift"],
   payouts: ["Payouts", "Your earnings and payout history"],
   monthly: ["Monthly", "Every day this month — click one to log it"],
+  yearly: ["Yearly", "A year of growth — click a month to set what it earned"],
   scouting: ["Scouting", "Passive income from models you brought to the agency"],
   settings: ["Settings", "Profile and notifications"],
 };
@@ -340,8 +345,9 @@ function switchView(view) {
   document.getElementById("view-title").textContent = title;
   document.getElementById("view-subtitle").textContent = subtitle;
   // charts rebuilt while their tab was hidden measure a 0×0 canvas — force a resize now that it's visible
-  [revenueChart, dailyChart, splitChart, scoutingChart].forEach(c => c && c.resize());
+  [revenueChart, dailyChart, splitChart, scoutingChart, yearlyChart].forEach(c => c && c.resize());
   if (view === "monthly") renderMonthly();
+  if (view === "yearly") renderYearly();
   if (view === "scouting") renderScouting();
 }
 
@@ -858,6 +864,180 @@ document.getElementById("month-next").addEventListener("click", () => { monthOff
 document.getElementById("month-today").addEventListener("click", () => { monthOffset = 0; renderMonthly(); });
 
 renderMonthly();
+
+/* ---------------- YEARLY: hockey-stick growth, editable per month ---------------- */
+const YEAR_MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function yearMonthKey(y, m) {
+  return `${y}-${String(m + 1).padStart(2, "0")}`;
+}
+
+/* Seeds the current year (up to the current real month) with a "nothing, nothing,
+   nothing... then it takes off" curve, like a channel that suddenly blows up. */
+function seedYearlyDataIfEmpty() {
+  if (Object.keys(state.yearlyData).length > 0) return;
+  const now = new Date();
+  const y = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0-indexed
+  const data = {};
+  let value = 60 + Math.random() * 50;
+  for (let m = 0; m <= currentMonth; m++) {
+    const progress = currentMonth === 0 ? 1 : m / currentMonth;
+    const factor = progress < 0.5 ? (0.92 + Math.random() * 0.28) : (1.45 + Math.random() * 0.45);
+    value = Math.max(15, Math.round(value * factor));
+    data[yearMonthKey(y, m)] = value;
+  }
+  state.yearlyData = data;
+  saveState(state);
+}
+
+let yearOffset = 0;
+let yearlyChart = null;
+
+function renderYearly() {
+  const ct = chartTheme();
+  const now = new Date();
+  const year = now.getFullYear() + yearOffset;
+  const isCurrentYear = year === now.getFullYear();
+
+  document.getElementById("year-label").textContent = String(year);
+  document.getElementById("year-next").disabled = yearOffset >= 0;
+
+  const months = Array.from({ length: 12 }, (_, m) => {
+    const key = yearMonthKey(year, m);
+    const isFuture = isCurrentYear ? m > now.getMonth() : year > now.getFullYear();
+    return { m, key, value: state.yearlyData[key], isFuture };
+  });
+
+  const tracked = months.filter(mo => typeof mo.value === "number");
+  const total = tracked.reduce((sum, mo) => sum + mo.value, 0);
+  const best = tracked.reduce((b, mo) => (!b || mo.value > b.value) ? mo : b, null);
+  const maxValue = Math.max(1, ...tracked.map(mo => mo.value));
+
+  document.getElementById("kpi-year-earned").textContent = money(total);
+  document.getElementById("kpi-year-months").textContent = `${tracked.length} month${tracked.length === 1 ? "" : "s"} tracked`;
+  document.getElementById("kpi-year-avg").textContent = tracked.length ? money(Math.round(total / tracked.length)) : "$0";
+  document.getElementById("kpi-year-best").textContent = best ? money(best.value) : "$0";
+  document.getElementById("kpi-year-best-sub").textContent = best ? YEAR_MONTH_LABELS[best.m] : "—";
+
+  const growthEl = document.getElementById("kpi-year-growth");
+  if (tracked.length >= 2 && tracked[0].value > 0) {
+    const multiple = tracked[tracked.length - 1].value / tracked[0].value;
+    growthEl.textContent = `${multiple.toFixed(1)}×`;
+    growthEl.classList.toggle("up", multiple >= 1);
+  } else {
+    growthEl.textContent = "—";
+    growthEl.classList.remove("up");
+  }
+
+  // month grid
+  document.getElementById("year-grid").innerHTML = months.map(mo => {
+    let cls = "cal-cell";
+    let inner = `<span class="cal-date">${YEAR_MONTH_LABELS[mo.m]}</span>`;
+    if (typeof mo.value === "number") {
+      const tier = mo.value > maxValue * 0.66 ? 3 : mo.value > maxValue * 0.33 ? 2 : 1;
+      cls += ` green green-${tier}`;
+      inner += `<span class="cal-amt">$${mo.value}</span>`;
+    } else if (mo.isFuture) {
+      cls += " future";
+      inner += `<span class="cal-amt">—</span>`;
+    } else {
+      cls += " off";
+      inner += `<span class="cal-amt">—</span>`;
+    }
+    return `<button type="button" class="${cls}" data-month="${mo.key}">${inner}</button>`;
+  }).join("");
+  document.querySelectorAll("#year-grid .cal-cell[data-month]").forEach(cell => {
+    cell.addEventListener("click", () => openMonthEditor(cell.dataset.month));
+  });
+
+  // chart: null for months with no data so the line just doesn't draw there yet
+  const chartData = months.map(mo => (typeof mo.value === "number" ? mo.value : null));
+  const labels = YEAR_MONTH_LABELS;
+
+  if (yearlyChart) yearlyChart.destroy();
+  yearlyChart = new Chart(document.getElementById("chart-yearly").getContext("2d"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data: chartData,
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointBorderWidth: 0,
+        pointHoverRadius: 5,
+        pointHoverBorderWidth: 0,
+        tension: 0,
+        fill: false,
+        spanGaps: false,
+        pointBackgroundColor: ctx => {
+          const i = ctx.dataIndex;
+          if (i === 0 || chartData[i - 1] == null) return GREEN;
+          return chartData[i] >= chartData[i - 1] ? GREEN : RED;
+        },
+        segment: {
+          borderColor: ctx => ctx.p0.parsed.y <= ctx.p1.parsed.y ? GREEN : RED,
+        },
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: ct.tooltipBg, borderColor: ct.tooltipBorder, borderWidth: 1,
+          padding: 8, titleColor: ct.tooltipTitle, bodyColor: ct.tooltipBody,
+          callbacks: { label: ctx => "  $" + ctx.parsed.y }
+        }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: ct.grid }, ticks: { callback: v => "$" + v } }
+      }
+    }
+  });
+}
+
+let editingMonthKey = null;
+
+function openMonthEditor(key) {
+  editingMonthKey = key;
+  const [y, m] = key.split("-").map(Number);
+  const value = state.yearlyData[key];
+  document.getElementById("month-editor-title").textContent = `Edit ${YEAR_MONTH_LABELS[m - 1]} ${y}`;
+  document.getElementById("input-month-earned").value = typeof value === "number" ? value : "";
+  const card = document.getElementById("month-editor-card");
+  card.hidden = false;
+  card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+document.getElementById("save-month-btn").addEventListener("click", () => {
+  if (!editingMonthKey) return;
+  const value = Math.max(0, Number(document.getElementById("input-month-earned").value) || 0);
+  state.yearlyData = { ...state.yearlyData, [editingMonthKey]: value };
+  saveState(state);
+  renderYearly();
+  flashStatus("month-status", "Saved ✓");
+});
+
+document.getElementById("clear-month-btn").addEventListener("click", () => {
+  if (!editingMonthKey) return;
+  const data = { ...state.yearlyData };
+  delete data[editingMonthKey];
+  state.yearlyData = data;
+  saveState(state);
+  renderYearly();
+  document.getElementById("month-editor-card").hidden = true;
+  editingMonthKey = null;
+});
+
+document.getElementById("year-prev").addEventListener("click", () => { yearOffset--; renderYearly(); });
+document.getElementById("year-next").addEventListener("click", () => { yearOffset = Math.min(0, yearOffset + 1); renderYearly(); });
+document.getElementById("year-today").addEventListener("click", () => { yearOffset = 0; renderYearly(); });
+
+renderYearly();
 
 /* ---------------- SCOUTING: passive income from models you brought in ---------------- */
 

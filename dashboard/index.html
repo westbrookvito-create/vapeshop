@@ -34,6 +34,10 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9.5h18M8 6V2.5M16 6V2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="6.5" y="12.5" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="10.5" y="12.5" width="3" height="3" rx="0.5" fill="currentColor" opacity="0.4"/><rect x="14.5" y="12.5" width="3" height="3" rx="0.5" fill="currentColor" opacity="0.4"/></svg>
         Monthly
       </button>
+      <button class="nav-item" data-view="yearly">
+        <svg viewBox="0 0 24 24"><path d="M4 20V4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 18l4-1 3 1.5 3-8 3 2L21 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Yearly
+      </button>
       <button class="nav-item" data-view="scouting">
         <svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14.5 14.5L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 10a3 3 0 0 1 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         Scouting
@@ -366,6 +370,72 @@
             <button class="btn-primary" id="save-day-btn">Save</button>
             <button class="btn-primary" id="clear-day-btn">Clear</button>
             <span class="save-status" id="day-status"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== YEARLY ===== -->
+      <section class="view" id="view-yearly">
+        <div class="month-nav">
+          <button class="icon-btn" id="year-prev" title="Previous year">
+            <svg viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <h2 id="year-label">2026</h2>
+          <button class="icon-btn" id="year-next" title="Next year">
+            <svg viewBox="0 0 24 24"><path d="M9 4l8 8-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="link-btn" id="year-today">This Year</button>
+        </div>
+
+        <div class="kpi-grid kpi-grid-4">
+          <div class="kpi-card">
+            <span class="kpi-label">Earned this year</span>
+            <div class="kpi-value" id="kpi-year-earned">$0</div>
+            <div class="kpi-trend" id="kpi-year-months">0 months tracked</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Avg per month</span>
+            <div class="kpi-value" id="kpi-year-avg">$0</div>
+            <div class="kpi-trend">per month</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Best month</span>
+            <div class="kpi-value" id="kpi-year-best">$0</div>
+            <div class="kpi-trend" id="kpi-year-best-sub">—</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Growth since Jan</span>
+            <div class="kpi-value up" id="kpi-year-growth">—</div>
+            <div class="kpi-trend">first vs latest month</div>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="card-head">
+            <div>
+              <h3>Yearly Growth</h3>
+              <p>Click a month below to set what it earned</p>
+            </div>
+          </div>
+          <canvas id="chart-yearly"></canvas>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Months</h3><p>Click a month to edit it</p></div>
+          </div>
+          <div class="cal-grid year-grid" id="year-grid"></div>
+        </div>
+
+        <div class="card" id="month-editor-card" hidden>
+          <div class="card-head"><div><h3 id="month-editor-title">Edit month</h3><p>This only updates the yearly chart</p></div></div>
+          <div class="form-grid">
+            <label>Earned ($)<input type="number" id="input-month-earned" min="0"></label>
+          </div>
+          <div class="settings-actions">
+            <button class="btn-primary" id="save-month-btn">Save</button>
+            <button class="btn-primary" id="clear-month-btn">Clear</button>
+            <span class="save-status" id="month-status"></span>
           </div>
         </div>
       </section>

@@ -211,6 +211,7 @@ html, body {
 
 .kpi-label { font-size: 11.5px; color: var(--text-dim); display: block; margin-bottom: 10px; }
 .kpi-value { font-size: 22px; font-weight: 700; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.kpi-value.up { color: var(--green); }
 .kpi-trend { font-size: 11.5px; color: var(--text-dimmer); }
 .kpi-trend span { color: var(--text-dimmer); margin-left: 3px; }
 .kpi-trend.up { color: var(--green); }
@@ -464,6 +465,7 @@ html, body {
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
 }
+.cal-grid.year-grid { grid-template-columns: repeat(6, 1fr); }
 
 .cal-cell {
   aspect-ratio: 1 / 0.85;
