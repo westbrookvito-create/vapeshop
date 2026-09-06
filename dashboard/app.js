@@ -879,8 +879,21 @@ function seededDayFactor(y, m, day) {
   return x - Math.floor(x);
 }
 
-/* Splits each tracked month's total into one bar per day, so the yearly chart reads
-   like a real analytics graph (many thin daily bars) instead of one point per month. */
+/* Sums the Monthly calendar's real day-by-day entries for one year-month, so Yearly always
+   agrees with whatever was actually logged in the Monthly tab. */
+function sumMonthlyDataForMonth(year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  let total = 0, hasData = false;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const rec = state.monthlyData[dateKey(year, month, d)];
+    if (rec) { hasData = true; total += rec.earned; }
+  }
+  return { total, hasData };
+}
+
+/* One bar per day of the year. Days that were actually logged in the Monthly calendar use
+   their real value; months that only have a hand-typed yearly total (no daily breakdown)
+   fall back to spreading that total across the month's days. */
 function buildYearlyDailyBars(year, months) {
   const now = new Date();
   const days = [];
@@ -890,8 +903,11 @@ function buildYearlyDailyBars(year, months) {
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, m, d);
       const isFuture = date > now;
+      const rec = state.monthlyData[dateKey(year, m, d)];
       let value = null;
-      if (typeof mo.value === "number" && !isFuture) {
+      if (rec) {
+        value = rec.earned;
+      } else if (!isFuture && typeof mo.value === "number") {
         const avg = mo.value / daysInMonth;
         const factor = 0.3 + seededDayFactor(year, m, d) * 1.4;
         value = Math.max(0, Math.round(avg * factor));
@@ -900,6 +916,64 @@ function buildYearlyDailyBars(year, months) {
     }
   }
   return days;
+}
+
+/* Rebuilds every day from Jan 1 through today as a "nothing, nothing... then it takes off"
+   curve: mostly $0 or a couple bucks early on, then a curved ramp that lands exactly on
+   today's real "Earned this shift" value. Feeds the Monthly calendar directly, so Yearly's
+   per-month totals and daily bars update automatically once they're derived from it. */
+function generateHockeyStickHistory() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const jan1 = new Date(year, 0, 1);
+  const totalDays = Math.round((now - jan1) / 86400000) + 1;
+  const rampStart = Math.floor(totalDays * (0.3 + Math.random() * 0.15));
+  const target = Math.max(20, state.earnedShift);
+
+  const generated = {};
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(jan1);
+    d.setDate(d.getDate() + i);
+    const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+
+    if (i === totalDays - 1) {
+      generated[key] = { earned: target, shifts: 1 }; // today matches "Earned this shift" exactly
+      continue;
+    }
+
+    if (i < rampStart) {
+      generated[key] = Math.random() < 0.4
+        ? { earned: 0, shifts: 0 }
+        : { earned: randomInt(0, 5), shifts: 1 };
+    } else {
+      const progress = (i - rampStart) / Math.max(1, totalDays - 1 - rampStart);
+      const curve = Math.pow(progress, 1.8);
+      if (Math.random() < 0.12) {
+        generated[key] = { earned: 0, shifts: 0 };
+      } else {
+        const earned = Math.max(0, Math.round(curve * target * (0.75 + Math.random() * 0.5)));
+        generated[key] = { earned, shifts: Math.random() < 0.15 ? 2 : 1 };
+      }
+    }
+  }
+
+  // keep anything outside Jan 1..today untouched (future-dated plans, other years)
+  const preserved = {};
+  for (const [key, rec] of Object.entries(state.monthlyData)) {
+    const [ky, km, kd] = key.split("-").map(Number);
+    const date = new Date(ky, km - 1, kd);
+    if (date < jan1 || date > now) preserved[key] = rec;
+  }
+  state.monthlyData = { ...preserved, ...generated };
+
+  // drop hand-typed yearly totals for the months we just filled with real daily data
+  const clearedYearly = { ...state.yearlyData };
+  for (let m = 0; m <= now.getMonth(); m++) delete clearedYearly[yearMonthKey(year, m)];
+  state.yearlyData = clearedYearly;
+
+  saveState(state);
+  renderMonthly();
+  renderYearly();
 }
 
 /* Seeds the current year (up to the current real month) with a "nothing, nothing,
@@ -936,7 +1010,9 @@ function renderYearly() {
   const months = Array.from({ length: 12 }, (_, m) => {
     const key = yearMonthKey(year, m);
     const isFuture = isCurrentYear ? m > now.getMonth() : year > now.getFullYear();
-    return { m, key, value: state.yearlyData[key], isFuture };
+    const daySum = sumMonthlyDataForMonth(year, m);
+    const value = daySum.hasData ? daySum.total : state.yearlyData[key];
+    return { m, key, value, isFuture };
   });
 
   const tracked = months.filter(mo => typeof mo.value === "number");
@@ -1003,14 +1079,17 @@ function renderYearly() {
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
+      // with 300+ hairline daily bars, hovering has to work anywhere along the chart —
+      // not just when the cursor lands exactly on a 1-2px wide bar
+      interaction: { mode: "index", intersect: false, axis: "x" },
       plugins: {
         legend: { display: false },
         tooltip: {
           backgroundColor: ct.tooltipBg, borderColor: ct.tooltipBorder, borderWidth: 1,
           padding: 8, titleColor: ct.tooltipTitle, bodyColor: ct.tooltipBody,
           callbacks: {
-            title: ctx => dayData[ctx[0].dataIndex].date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-            label: ctx => (ctx.parsed.y == null ? "no data" : "$" + ctx.parsed.y),
+            title: ctx => dayData[ctx[0].dataIndex].date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+            label: ctx => (ctx.parsed.y == null ? "No data" : "Earned: $" + ctx.parsed.y),
           }
         }
       },
@@ -1027,9 +1106,29 @@ let editingMonthKey = null;
 function openMonthEditor(key) {
   editingMonthKey = key;
   const [y, m] = key.split("-").map(Number);
-  const value = state.yearlyData[key];
+  const daySum = sumMonthlyDataForMonth(y, m - 1);
+  const input = document.getElementById("input-month-earned");
+  const hint = document.getElementById("month-editor-hint");
+  const saveBtn = document.getElementById("save-month-btn");
+  const clearBtn = document.getElementById("clear-month-btn");
+
   document.getElementById("month-editor-title").textContent = `Edit ${YEAR_MONTH_LABELS[m - 1]} ${y}`;
-  document.getElementById("input-month-earned").value = typeof value === "number" ? value : "";
+
+  if (daySum.hasData) {
+    input.value = daySum.total;
+    input.disabled = true;
+    saveBtn.disabled = true;
+    clearBtn.disabled = true;
+    hint.textContent = "This month is calculated from your daily entries in Monthly — edit individual days there.";
+  } else {
+    const value = state.yearlyData[key];
+    input.value = typeof value === "number" ? value : "";
+    input.disabled = false;
+    saveBtn.disabled = false;
+    clearBtn.disabled = false;
+    hint.textContent = "This only updates the yearly chart.";
+  }
+
   const card = document.getElementById("month-editor-card");
   card.hidden = false;
   card.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -1058,6 +1157,13 @@ document.getElementById("clear-month-btn").addEventListener("click", () => {
 document.getElementById("year-prev").addEventListener("click", () => { yearOffset--; renderYearly(); });
 document.getElementById("year-next").addEventListener("click", () => { yearOffset = Math.min(0, yearOffset + 1); renderYearly(); });
 document.getElementById("year-today").addEventListener("click", () => { yearOffset = 0; renderYearly(); });
+
+document.getElementById("generate-history-btn").addEventListener("click", () => {
+  const ok = confirm("This replaces your daily earnings from Jan 1 through today with a generated growth history. Continue?");
+  if (!ok) return;
+  generateHockeyStickHistory();
+  flashStatus("generate-history-status", "Generated ✓");
+});
 
 renderYearly();
 

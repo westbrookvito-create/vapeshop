@@ -414,7 +414,11 @@
           <div class="card-head">
             <div>
               <h3>Yearly Growth</h3>
-              <p>Click a month below to set what it earned</p>
+              <p>Day by day, synced with your Monthly calendar entries</p>
+            </div>
+            <div class="card-head-actions">
+              <button class="btn-primary" id="generate-history-btn">Generate History</button>
+              <span class="save-status" id="generate-history-status"></span>
             </div>
           </div>
           <canvas id="chart-yearly"></canvas>
@@ -428,7 +432,7 @@
         </div>
 
         <div class="card" id="month-editor-card" hidden>
-          <div class="card-head"><div><h3 id="month-editor-title">Edit month</h3><p>This only updates the yearly chart</p></div></div>
+          <div class="card-head"><div><h3 id="month-editor-title">Edit month</h3><p id="month-editor-hint">This only updates the yearly chart</p></div></div>
           <div class="form-grid">
             <label>Earned ($)<input type="number" id="input-month-earned" min="0"></label>
           </div>
