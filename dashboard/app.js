@@ -942,7 +942,12 @@ function generateHockeyStickHistory(flatMin, flatMax) {
   const now = new Date();
   const year = now.getFullYear();
   const jan1 = new Date(year, 0, 1);
-  const totalDays = Math.round((now - jan1) / 86400000) + 1;
+  // calendar-day count only — subtracting Date objects directly would include today's
+  // time-of-day, so anything after noon rounds up to an extra day and shifts "today"
+  // (and its real earnings) one day forward in the generated data
+  const utcJan1 = Date.UTC(jan1.getFullYear(), jan1.getMonth(), jan1.getDate());
+  const utcNow = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const totalDays = Math.round((utcNow - utcJan1) / 86400000) + 1;
   const rampStart = Math.floor(totalDays * (0.3 + Math.random() * 0.15));
   const target = Math.max(20, state.earnedShift);
 
