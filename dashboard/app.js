@@ -922,7 +922,7 @@ function buildYearlyDailyBars(year, months) {
    curve: mostly $0 or a couple bucks early on, then a curved ramp that lands exactly on
    today's real "Earned this shift" value. Feeds the Monthly calendar directly, so Yearly's
    per-month totals and daily bars update automatically once they're derived from it. */
-function generateHockeyStickHistory() {
+function generateHockeyStickHistory(flatMin, flatMax) {
   const now = new Date();
   const year = now.getFullYear();
   const jan1 = new Date(year, 0, 1);
@@ -944,7 +944,7 @@ function generateHockeyStickHistory() {
     if (i < rampStart) {
       generated[key] = Math.random() < 0.4
         ? { earned: 0, shifts: 0 }
-        : { earned: randomInt(0, 5), shifts: 1 };
+        : { earned: randomInt(flatMin, flatMax), shifts: 1 };
     } else {
       const progress = (i - rampStart) / Math.max(1, totalDays - 1 - rampStart);
       const curve = Math.pow(progress, 1.8);
@@ -1156,12 +1156,22 @@ document.getElementById("clear-month-btn").addEventListener("click", () => {
 
 document.getElementById("year-prev").addEventListener("click", () => { yearOffset--; renderYearly(); });
 document.getElementById("year-next").addEventListener("click", () => { yearOffset = Math.min(0, yearOffset + 1); renderYearly(); });
-document.getElementById("year-today").addEventListener("click", () => { yearOffset = 0; renderYearly(); });
+document.getElementById("year-today").addEventListener("click", () => {
+  yearOffset = 0;
+  renderYearly();
+  const panel = document.getElementById("generate-history-card");
+  panel.hidden = !panel.hidden;
+  if (!panel.hidden) panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
 
 document.getElementById("generate-history-btn").addEventListener("click", () => {
+  let flatMin = Math.max(0, Number(document.getElementById("input-flat-min").value) || 0);
+  let flatMax = Math.max(0, Number(document.getElementById("input-flat-max").value) || 0);
+  if (flatMax < flatMin) [flatMin, flatMax] = [flatMax, flatMin];
+
   const ok = confirm("This replaces your daily earnings from Jan 1 through today with a generated growth history. Continue?");
   if (!ok) return;
-  generateHockeyStickHistory();
+  generateHockeyStickHistory(flatMin, flatMax);
   flashStatus("generate-history-status", "Generated ✓");
 });
 

@@ -437,8 +437,6 @@ html, body {
 .btn-primary:disabled { opacity: 0.4; cursor: default; }
 .btn-primary:disabled:hover { border-color: var(--border); color: var(--text); }
 
-.card-head-actions { display: flex; align-items: center; gap: 10px; }
-
 .form-grid input:disabled { opacity: 0.6; cursor: default; }
 
 .settings-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }

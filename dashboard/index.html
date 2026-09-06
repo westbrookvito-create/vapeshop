@@ -387,6 +387,18 @@
           <button class="link-btn" id="year-today">This Year</button>
         </div>
 
+        <div class="card" id="generate-history-card" hidden>
+          <div class="card-head"><div><h3>Generate History</h3><p>Replaces Jan 1 through today with a growth curve, ending exactly at today's real earnings</p></div></div>
+          <div class="form-grid">
+            <label>Flat months min ($)<input type="number" id="input-flat-min" min="0" value="0"></label>
+            <label>Flat months max ($)<input type="number" id="input-flat-max" min="0" value="5"></label>
+          </div>
+          <div class="settings-actions">
+            <button class="btn-primary" id="generate-history-btn">Generate</button>
+            <span class="save-status" id="generate-history-status"></span>
+          </div>
+        </div>
+
         <div class="kpi-grid kpi-grid-4">
           <div class="kpi-card">
             <span class="kpi-label">Earned this year</span>
@@ -414,11 +426,7 @@
           <div class="card-head">
             <div>
               <h3>Yearly Growth</h3>
-              <p>Day by day, synced with your Monthly calendar entries</p>
-            </div>
-            <div class="card-head-actions">
-              <button class="btn-primary" id="generate-history-btn">Generate History</button>
-              <span class="save-status" id="generate-history-status"></span>
+              <p>Day by day, synced with your Monthly calendar entries — click This Year to generate a history</p>
             </div>
           </div>
           <canvas id="chart-yearly"></canvas>
