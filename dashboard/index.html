@@ -454,6 +454,22 @@
 
       <!-- ===== SCOUTING ===== -->
       <section class="view" id="view-scouting">
+        <div class="month-nav">
+          <button class="link-btn" id="scout-settings-toggle">Manage Models</button>
+        </div>
+
+        <div class="card" id="scout-settings-card" hidden>
+          <div class="card-head"><div><h3>Manage Scouted Models</h3><p>Regenerates your roster and passive income history</p></div></div>
+          <div class="form-grid">
+            <label>Number of models<input type="number" id="input-scout-count" min="1" max="10" value="4"></label>
+            <label>Monthly earnings min ($)<input type="number" id="input-scout-min" min="0" value="1200"></label>
+            <label>Monthly earnings max ($)<input type="number" id="input-scout-max" min="0" value="9500"></label>
+          </div>
+          <div class="settings-actions">
+            <button class="btn-primary" id="generate-scouting-btn">Generate</button>
+            <span class="save-status" id="generate-scouting-status"></span>
+          </div>
+        </div>
 
         <div class="kpi-grid kpi-grid-5">
           <div class="kpi-card">
@@ -487,30 +503,10 @@
           <div class="card-head">
             <div>
               <h3>Passive Income</h3>
-              <p>Last 6 months, from scouted models</p>
+              <p>Last 6 months, from scouted models — click Manage Models to configure</p>
             </div>
           </div>
           <canvas id="chart-scouting"></canvas>
-        </div>
-
-        <div class="card">
-          <div class="card-head"><div><h3>Add a Scouted Model</h3><p>You earn 13% of their earnings, passively, for as long as they stay</p></div></div>
-          <div class="form-grid">
-            <label>Model name<input type="text" id="input-scout-name" placeholder="e.g. Lily Monroe"></label>
-            <label>Platform
-              <select id="input-scout-platform">
-                <option>OnlyFans</option>
-                <option>Fansly</option>
-                <option>OnlyFans / Fansly</option>
-              </select>
-            </label>
-            <label>Date scouted<input type="date" id="input-scout-date"></label>
-            <label>Model's monthly earnings ($)<input type="number" id="input-scout-earnings" min="0" placeholder="e.g. 6000"></label>
-          </div>
-          <div class="settings-actions">
-            <button class="btn-primary" id="add-scout-btn">+ Add model</button>
-            <span class="save-status" id="add-scout-status"></span>
-          </div>
         </div>
 
         <div class="card">

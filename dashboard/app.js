@@ -7,6 +7,8 @@ function initials(name) {
 const MODEL_NAME_POOL = ["Kira Storm", "Aria Vale", "Nova Sky", "Luna Rae", "Mia Chase", "Zoe Blake", "Ivy Rose", "Skye Ellis"];
 const MODEL_PLATFORMS = ["OnlyFans", "Fansly", "OnlyFans / Fansly"];
 
+const SCOUT_NAME_POOL = ["Lily Monroe", "Ava Sinclair", "Ruby Chase", "Nadia Frost", "Willow Grey", "Sadie Quinn", "Harlow West", "Piper Lane", "Delilah Fox", "Ember Reyes"];
+
 /* ---------------- EDITABLE STATE (persisted to localStorage) ---------------- */
 const STORAGE_KEY = "chatterDashboardState";
 
@@ -1226,17 +1228,40 @@ renderYearly();
 function isoDateMinusMonths(months) {
   const d = new Date();
   d.setMonth(d.getMonth() - months);
-  return d.toISOString().slice(0, 10);
+  return dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/* Builds a fresh, randomized roster: most models land inside the given range, with an
+   occasional breakout star well above it and an occasional quiet one below it, scouted
+   at random points over the last year or so — so it doesn't look like a flat, even list. */
+function generateScoutedModels(count, minEarn, maxEarn) {
+  const n = Math.min(SCOUT_NAME_POOL.length, Math.max(1, count));
+  const names = [...SCOUT_NAME_POOL].sort(() => Math.random() - 0.5).slice(0, n);
+
+  return names.map((name, i) => {
+    const roll = Math.random();
+    let monthlyEarnings;
+    if (roll < 0.12) {
+      monthlyEarnings = randomInt(Math.round(maxEarn * 1.3), Math.round(maxEarn * 2.2)); // breakout star
+    } else if (roll < 0.25) {
+      monthlyEarnings = randomInt(Math.round(minEarn * 0.3), minEarn); // quiet one
+    } else {
+      monthlyEarnings = randomInt(minEarn, maxEarn);
+    }
+    return {
+      id: i + 1,
+      name,
+      platform: MODEL_PLATFORMS[Math.floor(Math.random() * MODEL_PLATFORMS.length)],
+      dateScouted: isoDateMinusMonths(randomInt(1, 14)),
+      monthlyEarnings,
+      active: Math.random() < 0.85, // most stay active, a couple wash out
+    };
+  });
 }
 
 function seedScoutingDataIfEmpty() {
   if (state.scoutedModels.length > 0) return;
-  state.scoutedModels = [
-    { id: 1, name: "Lily Monroe", platform: "OnlyFans", dateScouted: isoDateMinusMonths(8), monthlyEarnings: 9200, active: true },
-    { id: 2, name: "Ava Sinclair", platform: "OnlyFans / Fansly", dateScouted: isoDateMinusMonths(5), monthlyEarnings: 5400, active: true },
-    { id: 3, name: "Ruby Chase", platform: "Fansly", dateScouted: isoDateMinusMonths(3), monthlyEarnings: 2600, active: true },
-    { id: 4, name: "Nadia Frost", platform: "OnlyFans", dateScouted: isoDateMinusMonths(11), monthlyEarnings: 3100, active: false },
-  ];
+  state.scoutedModels = generateScoutedModels(4, 1200, 9500);
   saveState(state);
 }
 
@@ -1279,7 +1304,7 @@ function renderScouting() {
         <button type="button" class="link-btn" data-scout-remove="${m.id}">Remove</button>
       </td>
     </tr>
-  `).join("") || `<tr><td colspan="7" class="table-empty">No models scouted yet — add one above.</td></tr>`;
+  `).join("") || `<tr><td colspan="7" class="table-empty">No models scouted yet — click Manage Models above to generate some.</td></tr>`;
 
   document.querySelectorAll("[data-scout-toggle]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -1301,21 +1326,33 @@ function renderScouting() {
   });
 }
 
+/* Same jagged rise-dip-rise shape as the Yearly generator (see rampKeyframeValue), scaled
+   to the current total passive income instead of a monthly line straight to the top. */
 function buildScoutingChart() {
   const ct = chartTheme();
   const months = 6;
   const active = state.scoutedModels.filter(m => m.active);
   const currentTotal = active.reduce((sum, m) => sum + scoutCut(m), 0);
+  const keyframes = [
+    [0, 0.05],
+    [0.2, 0.28 * (0.7 + Math.random() * 0.6)],
+    [0.4, 0.10],
+    [0.6, 0.5 * (0.7 + Math.random() * 0.6)],
+    [0.8, 0.22],
+    [1, 1],
+  ];
   const labels = [];
   const data = [];
-  for (let i = months - 1; i >= 0; i--) {
+  for (let i = 0; i < months; i++) {
     const d = new Date();
-    d.setMonth(d.getMonth() - i);
+    d.setMonth(d.getMonth() - (months - 1 - i));
     labels.push(d.toLocaleDateString("en-US", { month: "short" }));
-    // fewer models were scouted the further back you go, so ramp up toward the current total
-    const rampedModels = active.filter(m => monthsSince(m.dateScouted) >= i + 1);
-    const total = rampedModels.reduce((sum, m) => sum + scoutCut(m), 0);
-    data.push(i === 0 ? currentTotal : Math.round(total * (0.85 + Math.random() * 0.3)));
+    if (i === months - 1) {
+      data.push(currentTotal);
+    } else {
+      const base = rampKeyframeValue(i / (months - 1), keyframes) * currentTotal;
+      data.push(Math.max(0, Math.round(base * (0.7 + Math.random() * 0.6))));
+    }
   }
 
   if (scoutingChart) scoutingChart.destroy();
@@ -1360,30 +1397,27 @@ function buildScoutingChart() {
   });
 }
 
-document.getElementById("add-scout-btn").addEventListener("click", () => {
-  const name = document.getElementById("input-scout-name").value.trim();
-  const platform = document.getElementById("input-scout-platform").value;
-  const dateScouted = document.getElementById("input-scout-date").value || new Date().toISOString().slice(0, 10);
-  const monthlyEarnings = Math.max(0, Number(document.getElementById("input-scout-earnings").value) || 0);
-
-  if (!name) {
-    flashStatus("add-scout-status", "Enter a name first");
-    return;
-  }
-
-  const nextId = state.scoutedModels.reduce((max, m) => Math.max(max, m.id), 0) + 1;
-  state.scoutedModels = [...state.scoutedModels, { id: nextId, name, platform, dateScouted, monthlyEarnings, active: true }];
-  saveState(state);
-
-  document.getElementById("input-scout-name").value = "";
-  document.getElementById("input-scout-earnings").value = "";
-
-  renderScouting();
-  buildScoutingChart();
-  flashStatus("add-scout-status", "Added ✓");
+document.getElementById("scout-settings-toggle").addEventListener("click", () => {
+  const panel = document.getElementById("scout-settings-card");
+  panel.hidden = !panel.hidden;
+  if (!panel.hidden) panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
 
-document.getElementById("input-scout-date").value = new Date().toISOString().slice(0, 10);
+document.getElementById("generate-scouting-btn").addEventListener("click", () => {
+  const count = Math.min(10, Math.max(1, Number(document.getElementById("input-scout-count").value) || 4));
+  let minEarn = Math.max(0, Number(document.getElementById("input-scout-min").value) || 0);
+  let maxEarn = Math.max(0, Number(document.getElementById("input-scout-max").value) || 0);
+  if (maxEarn < minEarn) [minEarn, maxEarn] = [maxEarn, minEarn];
+
+  const ok = confirm("This replaces your scouted models roster with a freshly generated one. Continue?");
+  if (!ok) return;
+
+  state.scoutedModels = generateScoutedModels(count, minEarn, maxEarn);
+  saveState(state);
+  renderScouting();
+  buildScoutingChart();
+  flashStatus("generate-scouting-status", "Generated ✓");
+});
 
 renderScouting();
 buildScoutingChart();
